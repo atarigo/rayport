@@ -1,0 +1,3 @@
+EMSDK_PATH = /path/to/emsdk
+CPYTHON_VERSION = v3.12.11
+CPYTHON_REPO = https://github.com/python/cpython.git

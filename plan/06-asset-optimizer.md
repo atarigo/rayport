@@ -15,3 +15,14 @@
 用外部工具（pngquant 壓 PNG、ffmpeg 轉音訊），透過 subprocess 呼叫。如果使用者沒有安裝這些工具，只印警告、不報錯、不擋住打包流程。
 
 這個模組是可選的，使用者可以完全關閉。
+
+## 實作計畫
+
+加入 `rayport build --optimize` 選項。具體工作：
+
+1. PNG 壓縮：呼叫 pngquant
+2. 音訊轉換：呼叫 ffmpeg 轉 ogg、降 sample rate 和聲道數
+3. 外部工具（pngquant、ffmpeg）不存在時只印警告，不擋住打包流程
+4. 優化結果放在 build 目錄，不動使用者的原始檔案
+
+此模組是第五階段（選做），依賴第三階段（模組 2 + 4）完成。

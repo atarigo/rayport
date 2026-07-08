@@ -57,3 +57,15 @@ asyncio.run(main())
 路線 A 對使用者最友善（不用改程式碼），但需要驗證技術可行性。路線 B 已經驗證可行，但使用者要接受程式碼被改寫（或自己加 `await`）。
 
 可以先走路線 B 確保能用，同時研究路線 A 的可行性。
+
+## 實作計畫
+
+開發順序：先試路線 A，失敗再做路線 B。
+
+路線 A 的實作：在 wasm 連結時加 `-sASYNCIFY`，驗證 ASYNCIFY 能穿透 CPython 的 ceval.c 主迴圈。注意：POC 階段移除了 `-sMAIN_MODULE`，需確認 ASYNCIFY 在純靜態連結下的相容性。可能大幅增加 wasm 體積。
+
+路線 B 的實作：寫一個 AST 轉換器，解析使用者的 Python 程式碼，把遊戲迴圈改成 async 版本，在 `end_drawing()` 後插入 `await asyncio.sleep(0)`。需要處理的邊界情況：巢狀函數呼叫中的 `end_drawing()`、多個遊戲迴圈、使用者自己寫的 async 程式碼。
+
+路線 B 即使作為備案也值得實作，因為它不依賴 ASYNCIFY 的不確定性。
+
+此模組是第二階段，依賴第一階段（模組 1 + 7）完成。

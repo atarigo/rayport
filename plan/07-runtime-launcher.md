@@ -25,3 +25,9 @@ runpy.run_path("main.py", run_name="__main__")
 ```
 
 就這樣。不需要像 pygbag 那樣搞 1700 行的啟動腳本。不需要替換標準庫模組、不需要 shell 指令集、不需要 REPL、不需要套件管理器。因為所有遊戲需要的東西（raylib 綁定、Python 標準庫）在模組 1 的編譯階段就已經嵌進 wasm 了。
+
+## 實作待辦
+
+1. 寫啟動腳本（上面的 Python 片段），嵌進 wasm 虛擬檔案系統
+2. 修改 wasm 的啟動流程：讓 CPython 啟動後自動執行啟動腳本，而非進入 REPL。透過 Emscripten 的 `-sPRE_JS` 或修改 HTML 殼層的載入邏輯實現
+3. 與模組 1 一起作為第一階段交付：一個能自動執行 `/game/main.py` 的 wasm runtime

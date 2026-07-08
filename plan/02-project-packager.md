@@ -29,3 +29,14 @@
 用 Emscripten 的打包工具 `file_packager.py` 把遊戲檔案嵌進一個 `.data` 檔，啟動時自動載入。
 
 好處是快，壞處是每次改動都要重新打包。
+
+## 實作計畫
+
+寫一個 Python CLI，整合進 `rayport build` 指令。具體工作：
+
+1. 走訪使用者的遊戲專案目錄，收集 .py 檔和 resources/ 裡的資源檔
+2. 跳過 .git、__pycache__、venv、.env 等不需要的目錄和檔案
+3. 打成 tar.gz，放進 build/ 輸出目錄
+4. 開發時用 runtime fetch（tar.gz），發佈時可選用 Emscripten preload
+
+此模組是純 Python 工作，沒有 C 編譯。與模組 4（HTML 殼層）一起作為第三階段交付。

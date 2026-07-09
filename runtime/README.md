@@ -6,11 +6,9 @@ CPython interpreter compiled to WebAssembly via Emscripten. User's Python game c
 
 | File | Description |
 |------|-------------|
-| python.wasm | CPython interpreter as a WebAssembly binary (9 MB) |
-| python.js | Emscripten glue code that loads the wasm, initializes memory, and sets up the virtual filesystem (545 KB) |
-| python.data | CPython standard library (.pyc files) packed into a binary blob, loaded into the in-memory virtual filesystem at startup (3 MB) |
-| python.html | Emscripten default test page with a Python REPL terminal |
-| python.worker.js | Web Worker script for background thread support |
+| main.wasm | CPython interpreter + raylib engine as a WebAssembly binary |
+| main.js | Emscripten glue code that loads the wasm, initializes memory, and sets up the virtual filesystem |
+| main.data | CPython standard library and raylib Python package packed into a binary blob, loaded into the in-memory virtual filesystem at startup |
 
 ## How to build
 
@@ -28,7 +26,7 @@ export EM_CONFIG="$EMSDK/.emscripten"
 python3 Tools/wasm/wasm_build.py emscripten-browser
 ```
 
-Output files are in `cpython-src/builddir/emscripten-browser/`.
+Output files are in `cpython-src/builddir/emscripten-browser/`, named `main.*` (not `python.*`).
 
 ## Current status
 

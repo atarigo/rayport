@@ -13,5 +13,5 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         super().end_headers()
 
 port = int(sys.argv[1]) if len(sys.argv) > 1 else 8080
-print(f"http://localhost:{port}/runtime/python.html")
+print(f"http://localhost:{port}")
 http.server.HTTPServer(("", port), Handler).serve_forever()

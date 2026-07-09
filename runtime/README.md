@@ -12,22 +12,10 @@ CPython interpreter compiled to WebAssembly via Emscripten. User's Python game c
 
 ## How to build
 
-Requires Emscripten SDK and a system Python 3. CPython source code is only needed during compilation and can be deleted afterward.
+在專案根目錄執行：
 
 ```bash
-git clone --depth 1 --branch v3.12.11 https://github.com/python/cpython.git cpython-src
-cd cpython-src
-
-# Build native Python (needed as a build tool for cross-compilation)
-python3 Tools/wasm/wasm_build.py build
-
-# Cross-compile to wasm (EM_CONFIG must point to emsdk's .emscripten file)
-export EM_CONFIG="$EMSDK/.emscripten"
-python3 Tools/wasm/wasm_build.py emscripten-browser
+make runtime
 ```
 
-Output files are in `cpython-src/builddir/emscripten-browser/`, named `main.*` (not `python.*`).
-
-## Current status
-
-This runtime only contains the CPython interpreter. The final version needs raylib and raylib-python-cffi bindings statically linked into python.wasm so that Python code can call raylib's graphics, input, and audio functions.
+Emscripten SDK 和所有原始碼依賴會自動下載。預設下載到 `/tmp/rayport-emsdk`（emsdk）和 `.cache/`（CPython、raylib 等原始碼）。如需自訂路徑或版本，建立 `build.conf`（參考 `build.conf.example`）。

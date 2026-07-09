@@ -8,18 +8,20 @@ The tool bundles a CPython interpreter and raylib engine compiled to WebAssembly
 
 ## Prerequisites
 
-- [Emscripten SDK](https://emscripten.org/) (3.1.61 recommended)
 - Python 3.13+
+- git
 
 ## Building the runtime
 
 The runtime contains the CPython wasm interpreter. Build it once; rebuild only when upgrading CPython or raylib.
 
+Emscripten SDK 和其他依賴會自動下載到 `/tmp/rayport-emsdk`，不需要預先安裝，也不會修改 shell 環境。
+
 ```bash
-cp build.conf.example build.conf
-# Edit build.conf to set your EMSDK_PATH
 make runtime
 ```
+
+如需自訂路徑或版本，建立 `build.conf`（參考 `build.conf.example`）。
 
 ## Usage
 

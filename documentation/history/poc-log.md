@@ -19,7 +19,7 @@ Two approaches exist for loading user game files into the wasm virtual filesyste
 ## Build Environment
 
 - macOS Darwin 25.5.0 (ARM64)
-- Emscripten 3.1.61 (installed at `~/Workbench/atarigo/emsdk`)
+- Emscripten 3.1.61
 - CPython 3.12.11 (compiled from source)
 - raylib 5.5 (compiled from source)
 - raylib-python-cffi (latest main branch, used only for CFFI code generation)
@@ -110,7 +110,7 @@ After rebuilding with 3.1.61, the REPL loaded and ran correctly.
 
 **EMSDK_QUIET not working**
 
-Adding `export EMSDK_QUIET=1` before `source emsdk_env.sh` in `~/.zshrc` didn't suppress the startup messages. Root cause: `~/.zprofile` also had `source emsdk_env.sh` (added by Spectra or emsdk itself), and `.zprofile` runs BEFORE `.zshrc`. The messages came from `.zprofile`'s source, when `EMSDK_QUIET` wasn't set yet.
+Adding `export EMSDK_QUIET=1` before `source emsdk_env.sh` in `~/.zshrc` didn't suppress the startup messages. Root cause: `~/.zprofile` also had `source emsdk_env.sh`（由其他工具或 emsdk 本身寫入），and `.zprofile` runs BEFORE `.zshrc`. The messages came from `.zprofile`'s source, when `EMSDK_QUIET` wasn't set yet.
 
 Fix: move `export EMSDK_QUIET=1` to `~/.zprofile`, before the `source` line. Remove the duplicate from `~/.zshrc`.
 

@@ -1,5 +1,7 @@
 # POC Verification Log
 
+> 歷史文件。記錄開發初期的技術可行性驗證過程。內容反映驗證當時的狀態，部分細節可能與最終實作不同。
+
 This document records the full feasibility verification process for rayport (formerly raylib-web-tool), a tool that packages raylib Python games to run in the browser.
 
 ## Background

@@ -21,13 +21,20 @@ cp build.conf.example build.conf
 make runtime
 ```
 
-## Development
+## Usage
+
+Build a game for web deployment:
 
 ```bash
-python3 dev_server.py
-# Open http://localhost:8080/runtime/python.html
+rayport build ./my-game/
 ```
 
-## Project status
+Start a dev server with live reload:
 
-Early development. Validating technical feasibility of the CPython + raylib wasm pipeline.
+```bash
+rayport dev ./my-game/
+```
+
+## Documentation
+
+See [documentation/](documentation/README.md) for architecture details and module descriptions.

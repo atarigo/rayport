@@ -39,7 +39,7 @@ body {
     transition: width 0.2s;
 }
 #status { font-size: 14px; opacity: 0.7; }
-canvas { display: block; width: 100vw; height: 100vh; }
+canvas { display: block; }
 </style>
 </head>
 <body>
@@ -47,7 +47,7 @@ canvas { display: block; width: 100vw; height: 100vh; }
     <div id="status">Loading...</div>
     <div id="progress-bar"><div id="progress-fill"></div></div>
 </div>
-<canvas id="canvas" oncontextmenu="event.preventDefault()" style="display:none"></canvas>
+<canvas id="canvas" width="$width" height="$height" oncontextmenu="event.preventDefault()" style="display:none"></canvas>
 <script>
 var progressFill = document.getElementById("progress-fill");
 var statusText = document.getElementById("status");
@@ -111,12 +111,6 @@ var Module = {
     onRuntimeInitialized: function() {
         loadingDiv.classList.add("hidden");
         canvasEl.style.display = "block";
-        function resizeCanvas() {
-            canvasEl.width = window.innerWidth;
-            canvasEl.height = window.innerHeight;
-        }
-        resizeCanvas();
-        window.addEventListener("resize", resizeCanvas);
     }
 };
 </script>

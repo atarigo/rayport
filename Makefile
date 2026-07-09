@@ -7,15 +7,27 @@
 #           修補 config.c -> 安裝 Python 檔案 -> 最終連結 -> 複製到 runtime/
 # =============================================================================
 
-# --- 組態（缺少 build.conf 時不報錯）---
+# --- 組態預設值（build.conf 可覆寫）---
 -include build.conf
 
-# --- Emscripten 工具路徑 ---
-export EM_CONFIG = $(EMSDK_PATH)/.emscripten
-export EMSDK     = $(EMSDK_PATH)
-export PATH     := $(EMSDK_PATH):$(EMSDK_PATH)/upstream/emscripten:$(PATH)
-EMCC             = $(EMSDK_PATH)/upstream/emscripten/emcc
-EMAR             = $(EMSDK_PATH)/upstream/emscripten/emar
+EMSDK_PATH       ?= /tmp/rayport-emsdk
+EMSDK_VERSION    ?= 3.1.61
+EMSDK_REPO       ?= https://github.com/emscripten-core/emsdk.git
+CPYTHON_VERSION  ?= v3.12.11
+CPYTHON_REPO     ?= https://github.com/python/cpython.git
+RAYLIB_VERSION   ?= 5.5
+RAYLIB_REPO      ?= https://github.com/raysan5/raylib.git
+RAYLIB_CFFI_REPO ?= https://github.com/electronstudio/raylib-python-cffi.git
+
+# --- Emscripten 工具路徑（覆寫 shell 中可能殘留的舊 emsdk 環境變數）---
+export EM_CONFIG     = $(EMSDK_PATH)/.emscripten
+export EMSDK         = $(EMSDK_PATH)
+export EMSDK_PYTHON := python3
+export EMSDK_NODE   :=
+unexport SSL_CERT_FILE
+export PATH         := $(EMSDK_PATH):$(EMSDK_PATH)/upstream/emscripten:$(PATH)
+EMCC                 = $(EMSDK_PATH)/upstream/emscripten/emcc
+EMAR                 = $(EMSDK_PATH)/upstream/emscripten/emar
 
 # --- 目錄與檔案變數 ---
 CACHE           = .cache
@@ -45,6 +57,15 @@ help: ## Show available commands
 runtime: link ## 建置完整 wasm runtime 並複製產物到 runtime/
 	mkdir -p runtime
 	cp $(BUILD_DIR)/main.wasm $(BUILD_DIR)/main.js $(BUILD_DIR)/main.data runtime/
+
+# =============================================================================
+# Emscripten SDK 自動取得
+# =============================================================================
+
+$(EMCC):
+	test -d $(EMSDK_PATH) || git clone --depth 1 $(EMSDK_REPO) $(EMSDK_PATH)
+	cd $(EMSDK_PATH) && ./emsdk install $(EMSDK_VERSION)
+	cd $(EMSDK_PATH) && ./emsdk activate $(EMSDK_VERSION)
 
 # =============================================================================
 # 原始碼取得（目錄已存在時不重複執行）
@@ -80,11 +101,11 @@ $(BUILD_NATIVE): $(CPYTHON_SRC)/configure
 	cd $(CPYTHON_SRC) && python3 Tools/wasm/wasm_build.py build
 
 # 交叉編譯 CPython 為 wasm（初始版本，尚未含 raylib）
-$(BUILD_DIR)/python.wasm: $(BUILD_NATIVE)
+$(BUILD_DIR)/python.wasm: $(BUILD_NATIVE) | $(EMCC)
 	cd $(CPYTHON_SRC) && python3 Tools/wasm/wasm_build.py emscripten-browser
 
 # 以 -fPIC 編譯 raylib 的 web 版本
-$(RAYLIB_LIB): $(RAYLIB_SRC)/raylib.h
+$(RAYLIB_LIB): $(RAYLIB_SRC)/raylib.h | $(EMCC)
 	cd $(RAYLIB_SRC) && make PLATFORM=PLATFORM_WEB -B \
 	  "CFLAGS=-Wall -D_GNU_SOURCE -DPLATFORM_WEB -DGRAPHICS_API_OPENGL_ES2 -Wno-missing-braces -Werror=pointer-arith -fno-strict-aliasing -std=gnu99 -Os -fPIC"
 
@@ -110,11 +131,11 @@ $(BUILD_DIR)/Modules/_raylib_cffi.o: $(CFFI_C) $(BUILD_DIR)/python.wasm
 	  -o $@ $(CFFI_C)
 
 # 編譯 libffi stubs
-$(CACHE)/ffi_type_stubs.o: $(STUBS)/ffi_type_stubs.c $(CFFI_SRC)/_cffi_backend.c
+$(CACHE)/ffi_type_stubs.o: $(STUBS)/ffi_type_stubs.c $(CFFI_SRC)/_cffi_backend.c | $(EMCC)
 	$(EMCC) -c -O3 -I$(LIBFFI_INC) -o $@ $(STUBS)/ffi_type_stubs.c
 
 # 編譯 web stubs
-$(CACHE)/web_stubs.o: $(STUBS)/web_stubs.c $(RAYLIB_SRC)/raylib.h
+$(CACHE)/web_stubs.o: $(STUBS)/web_stubs.c $(RAYLIB_SRC)/raylib.h | $(EMCC)
 	$(EMCC) -c -O3 -I$(RAYLIB_SRC) -o $@ $(STUBS)/web_stubs.c
 
 # =============================================================================

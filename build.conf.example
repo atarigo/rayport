@@ -1,6 +1,11 @@
-EMSDK_PATH       = /path/to/emsdk
-CPYTHON_VERSION  = v3.12.11
-CPYTHON_REPO     = https://github.com/python/cpython.git
-RAYLIB_VERSION   = 5.5
-RAYLIB_REPO      = https://github.com/raysan5/raylib.git
-RAYLIB_CFFI_REPO = https://github.com/electronstudio/raylib-python-cffi.git
+# 所有設定皆有預設值，不建立 build.conf 也能直接 make runtime。
+# 只需取消註解並修改要自訂的項目。
+
+# EMSDK_PATH       = /tmp/rayport-emsdk
+# EMSDK_VERSION    = 3.1.61
+# EMSDK_REPO       = https://github.com/emscripten-core/emsdk.git
+# CPYTHON_VERSION  = v3.12.11
+# CPYTHON_REPO     = https://github.com/python/cpython.git
+# RAYLIB_VERSION   = 5.5
+# RAYLIB_REPO      = https://github.com/raysan5/raylib.git
+# RAYLIB_CFFI_REPO = https://github.com/electronstudio/raylib-python-cffi.git

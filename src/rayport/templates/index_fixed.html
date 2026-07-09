@@ -59,6 +59,15 @@ function updateProgress(pct, msg) {
     if (msg) statusText.textContent = msg;
 }
 
+function ensureDir(path) {
+    var segs = path.split("/").filter(Boolean);
+    var cur = "";
+    for (var i = 0; i < segs.length; i++) {
+        try { Module["FS_createPath"](cur || "/", segs[i], true, true); } catch(e) {}
+        cur += "/" + segs[i];
+    }
+}
+
 async function extractTarGz(buffer) {
     var ds = new DecompressionStream("gzip");
     var decompressed = new Response(new Blob([buffer]).stream().pipeThrough(ds));
@@ -77,11 +86,14 @@ async function extractTarGz(buffer) {
         if (name && name !== "./") {
             var fullPath = "/usr/local/game/" + name.replace(/^\.\//, "");
             if (type === 53 || name.endsWith("/")) {
-                try { FS.mkdirTree(fullPath); } catch(e) {}
+                ensureDir(fullPath);
             } else if (size > 0) {
-                var dir = fullPath.substring(0, fullPath.lastIndexOf("/"));
-                if (dir) try { FS.mkdirTree(dir); } catch(e) {}
-                FS.writeFile(fullPath, data.slice(offset, offset + size));
+                var slash = fullPath.lastIndexOf("/");
+                var dir = fullPath.substring(0, slash);
+                var fname = fullPath.substring(slash + 1);
+                ensureDir(dir);
+                try { Module["FS_unlink"](fullPath); } catch(e) {}
+                Module["FS_createDataFile"](dir, fname, data.slice(offset, offset + size), true, true, true);
             }
         }
         offset += Math.ceil(size / 512) * 512;

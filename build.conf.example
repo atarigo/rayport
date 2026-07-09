@@ -1,3 +1,6 @@
-EMSDK_PATH = /path/to/emsdk
-CPYTHON_VERSION = v3.12.11
-CPYTHON_REPO = https://github.com/python/cpython.git
+EMSDK_PATH       = /path/to/emsdk
+CPYTHON_VERSION  = v3.12.11
+CPYTHON_REPO     = https://github.com/python/cpython.git
+RAYLIB_VERSION   = 5.5
+RAYLIB_REPO      = https://github.com/raysan5/raylib.git
+RAYLIB_CFFI_REPO = https://github.com/electronstudio/raylib-python-cffi.git

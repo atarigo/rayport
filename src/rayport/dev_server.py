@@ -112,7 +112,7 @@ class FileWatcher:
         self._stop.set()
 
 
-def run_dev(game_dir, output_dir="build", title="rayport game", width=800, height=450, port=8080):
+def run_dev(game_dir, output_dir="build", title="rayport game", width=800, height=450, port=8080, optimize=False):
     global reload_version
 
     game_path = Path(game_dir).resolve()
@@ -124,7 +124,7 @@ def run_dev(game_dir, output_dir="build", title="rayport game", width=800, heigh
         shutil.rmtree(output_path)
     output_path.mkdir(parents=True)
 
-    pack_game(str(game_path), str(output_path / "game.tar.gz"))
+    pack_game(str(game_path), str(output_path / "game.tar.gz"), optimize=optimize)
     generate_html(str(output_path / "index.html"), title=title, width=width, height=height)
     for fname in ["main.wasm", "main.js", "main.data"]:
         src = runtime_dir / fname
@@ -139,7 +139,7 @@ def run_dev(game_dir, output_dir="build", title="rayport game", width=800, heigh
         rel_paths = [str(Path(p).relative_to(game_path)) for p in changed if str(game_path) in p]
         if rel_paths:
             print(f"Changed: {', '.join(rel_paths[:5])}")
-        pack_game(str(game_path), str(output_path / "game.tar.gz"))
+        pack_game(str(game_path), str(output_path / "game.tar.gz"), optimize=optimize)
         reload_version += 1
         print(f"Repacked. Browser will reload. (v{reload_version})")
 

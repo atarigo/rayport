@@ -18,7 +18,7 @@ def cmd_build(args):
     output_dir.mkdir(parents=True)
 
     print(f"Packing game from {game_dir}...")
-    pack_game(str(game_dir), str(output_dir / "game.tar.gz"))
+    pack_game(str(game_dir), str(output_dir / "game.tar.gz"), optimize=args.optimize)
 
     print("Generating index.html...")
     generate_html(
@@ -47,6 +47,7 @@ def cmd_dev(args):
         width=args.width,
         height=args.height,
         port=args.port,
+        optimize=args.optimize,
     )
 
 
@@ -60,6 +61,7 @@ def main():
     build_parser.add_argument("--title", "-t", default="rayport game", help="Game title (default: rayport game)")
     build_parser.add_argument("--width", "-W", type=int, default=800, help="Canvas width (default: 800)")
     build_parser.add_argument("--height", "-H", type=int, default=450, help="Canvas height (default: 450)")
+    build_parser.add_argument("--optimize", action="store_true", help="Optimize PNG and audio assets (requires pngquant and ffmpeg)")
 
     dev_parser = subparsers.add_parser("dev", help="Start dev server with live reload")
     dev_parser.add_argument("game_dir", help="Path to the game project directory (must contain main.py)")
@@ -68,6 +70,7 @@ def main():
     dev_parser.add_argument("--width", "-W", type=int, default=800, help="Canvas width (default: 800)")
     dev_parser.add_argument("--height", "-H", type=int, default=450, help="Canvas height (default: 450)")
     dev_parser.add_argument("--port", "-p", type=int, default=8080, help="Server port (default: 8080)")
+    dev_parser.add_argument("--optimize", action="store_true", help="Optimize PNG and audio assets (requires pngquant and ffmpeg)")
 
     args = parser.parse_args()
     if args.command == "build":

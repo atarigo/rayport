@@ -169,7 +169,6 @@ install-raylib-py: $(BUILD_DIR)/python.wasm $(RAYLIB_CFFI_SRC)/raylib/__init__.p
 	printf '%s\n' "$$RAYLIB_INIT_PY" > $(PRELOAD_RAYLIB)/__init__.py
 	cp $(STUBS)/launcher.py $(BUILD_DIR)/usr/local/lib/python3.12/launcher.py
 	mkdir -p $(BUILD_DIR)/usr/local/game
-	cp $(STUBS)/test_game.py $(BUILD_DIR)/usr/local/game/main.py
 
 # =============================================================================
 # 最終連結：產生含 raylib 的 python.wasm

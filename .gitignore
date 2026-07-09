@@ -3,3 +3,4 @@ build/
 build.conf
 __pycache__/
 *.pyc
+*.egg-info/

@@ -45,7 +45,6 @@ help: ## Show available commands
 runtime: link ## 建置完整 wasm runtime 並複製產物到 runtime/
 	mkdir -p runtime
 	cp $(BUILD_DIR)/main.wasm $(BUILD_DIR)/main.js $(BUILD_DIR)/main.data runtime/
-	cp stubs/game.html runtime/
 
 # =============================================================================
 # 原始碼取得（目錄已存在時不重複執行）
@@ -207,4 +206,4 @@ clean: ## 刪除 .cache 建置快取
 
 .PHONY: clean-runtime
 clean-runtime: ## 刪除 runtime/ 內的建置產物
-	rm -f runtime/main.wasm runtime/main.js runtime/main.data runtime/game.html
+	rm -f runtime/main.wasm runtime/main.js runtime/main.data

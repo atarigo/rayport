@@ -1,3 +1,16 @@
+from raylib import *
+InitWindow(800, 450, b"rayport test")
+while not WindowShouldClose():
+    BeginDrawing()
+    ClearBackground(RAYWHITE)
+    DrawText(b"Hello from rayport!", 100, 200, 40, RED)
+    EndDrawing()
+CloseWindow()
+import sys, os, runpy
+game_dir = "/usr/local/game"
+os.chdir(game_dir)
+sys.path.insert(0, game_dir)
+runpy.run_path("main.py", run_name="__main__")
 r"""OS routines for NT or Posix depending on what system we're on.
 
 This exports:

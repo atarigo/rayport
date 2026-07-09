@@ -45,6 +45,7 @@ help: ## Show available commands
 runtime: link ## 建置完整 wasm runtime 並複製產物到 runtime/
 	mkdir -p runtime
 	cp $(BUILD_DIR)/main.wasm $(BUILD_DIR)/main.js $(BUILD_DIR)/main.data runtime/
+	cp stubs/game.html runtime/
 
 # =============================================================================
 # 原始碼取得（目錄已存在時不重複執行）
@@ -167,6 +168,9 @@ install-raylib-py: $(BUILD_DIR)/python.wasm $(RAYLIB_CFFI_SRC)/raylib/__init__.p
 	   $(RAYLIB_CFFI_SRC)/raylib/version.py \
 	   $(PRELOAD_RAYLIB)/
 	printf '%s\n' "$$RAYLIB_INIT_PY" > $(PRELOAD_RAYLIB)/__init__.py
+	cp $(STUBS)/launcher.py $(BUILD_DIR)/usr/local/lib/python3.12/launcher.py
+	mkdir -p $(BUILD_DIR)/usr/local/game
+	cp $(STUBS)/test_game.py $(BUILD_DIR)/usr/local/game/main.py
 
 # =============================================================================
 # 最終連結：產生含 raylib 的 python.wasm
@@ -203,4 +207,4 @@ clean: ## 刪除 .cache 建置快取
 
 .PHONY: clean-runtime
 clean-runtime: ## 刪除 runtime/ 內的建置產物
-	rm -f runtime/main.wasm runtime/main.js runtime/main.data
+	rm -f runtime/main.wasm runtime/main.js runtime/main.data runtime/game.html

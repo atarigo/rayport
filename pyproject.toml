@@ -1,9 +1,15 @@
 [project]
 name = "rayport"
 version = "0.1.0"
-description = "Add your description here"
+description = "Package raylib Python games for the web"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "cffi>=2.1.0",
 ]
+
+[project.scripts]
+rayport = "rayport.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

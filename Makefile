@@ -181,7 +181,7 @@ link: patch-config install-raylib-py $(BUILD_DIR)/Modules/_cffi_backend.o $(BUIL
 	$(EMAR) r $(BUILD_DIR)/libpython3.12.a \
 	  $(BUILD_DIR)/Modules/_cffi_backend.o \
 	  $(BUILD_DIR)/Modules/_raylib_cffi.o
-	cd $(BUILD_DIR) && $(abspath $(EMCC)) -sUSE_GLFW=3 -sALLOW_MEMORY_GROWTH -sTOTAL_MEMORY=20971520 -sWASM_BIGINT \
+	cd $(BUILD_DIR) && $(abspath $(EMCC)) -sUSE_GLFW=3 -sASYNCIFY -sASYNCIFY_STACK_SIZE=65536 -sALLOW_MEMORY_GROWTH -sTOTAL_MEMORY=20971520 -sWASM_BIGINT \
 	  -sFORCE_FILESYSTEM -lidbfs.js -lnodefs.js -lproxyfs.js -lworkerfs.js \
 	  --preload-file=./usr/local -O2 -g0 \
 	  -o main.js \

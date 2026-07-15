@@ -1,7 +1,5 @@
 import tarfile
 import os
-import shutil
-import tempfile
 from dataclasses import dataclass
 from fnmatch import fnmatchcase
 from pathlib import Path
@@ -29,6 +27,7 @@ class FileDecision:
     path: str
     included: bool
     reason: str
+    size: int = 0
 
 
 def _matches(path: str, pattern: str) -> bool:
@@ -71,27 +70,42 @@ def decide_file(path: str, exclude: tuple[str, ...] = (), include: tuple[str, ..
     return FileDecision(path, True, "included by default")
 
 
-def inspect_game(game_dir: str, exclude: tuple[str, ...] = (), include: tuple[str, ...] = ()) -> list[FileDecision]:
+def inspect_game(
+    game_dir: str,
+    exclude: tuple[str, ...] = (),
+    include: tuple[str, ...] = (),
+    ignore_paths: tuple[str | Path, ...] = (),
+) -> list[FileDecision]:
     game_path = Path(game_dir).resolve()
     if not game_path.is_dir():
         raise FileNotFoundError(f"Game directory not found: {game_dir}")
 
+    ignored = tuple(Path(path).resolve() for path in ignore_paths)
     decisions = []
     for root, dirs, files in os.walk(game_path):
-        dirs.sort()
+        dirs[:] = sorted(
+            directory
+            for directory in dirs
+            if not any((Path(root) / directory).resolve() == path for path in ignored)
+        )
         for filename in sorted(files):
             filepath = Path(root) / filename
+            if any(filepath.resolve() == path for path in ignored):
+                continue
             relative = filepath.relative_to(game_path).as_posix()
-            decisions.append(decide_file(relative, exclude=exclude, include=include))
+            decision = decide_file(relative, exclude=exclude, include=include)
+            decisions.append(
+                FileDecision(decision.path, decision.included, decision.reason, filepath.stat().st_size)
+            )
     return decisions
 
 
 def pack_game(
     game_dir: str,
     output_path: str,
-    optimize: bool = False,
     exclude: tuple[str, ...] = (),
     include: tuple[str, ...] = (),
+    ignore_paths: tuple[str | Path, ...] = (),
 ) -> None:
     game_path = Path(game_dir).resolve()
     if not game_path.is_dir():
@@ -104,22 +118,13 @@ def pack_game(
 
     output_file = Path(output_path).resolve()
 
-    pack_source = game_path
-    tmp_dir = None
-
-    if optimize:
-        from rayport.optimizer import optimize_assets
-        tmp_dir = tempfile.mkdtemp(prefix="rayport_opt_")
-        print("Optimizing assets...")
-        optimize_assets(str(game_path), tmp_dir, exclude=exclude, include=include)
-        pack_source = Path(tmp_dir)
-
-    try:
-        with tarfile.open(output_path, "w:gz") as tar:
-            for decision in inspect_game(str(pack_source), exclude=exclude, include=include):
-                source_file = pack_source / decision.path
-                if decision.included and source_file.resolve() != output_file:
-                    tar.add(source_file, arcname=decision.path)
-    finally:
-        if tmp_dir:
-            shutil.rmtree(tmp_dir, ignore_errors=True)
+    with tarfile.open(output_path, "w:gz") as tar:
+        for decision in inspect_game(
+            str(game_path),
+            exclude=exclude,
+            include=include,
+            ignore_paths=ignore_paths,
+        ):
+            source_file = game_path / decision.path
+            if decision.included and source_file.resolve() != output_file:
+                tar.add(source_file, arcname=decision.path)

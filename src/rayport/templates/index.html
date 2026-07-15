@@ -136,33 +136,87 @@ function ensureDir(path) {
     }
 }
 
+var utf8Decoder = new TextDecoder();
+
+function readTarText(bytes) {
+    var end = bytes.indexOf(0);
+    return utf8Decoder.decode(end >= 0 ? bytes.slice(0, end) : bytes);
+}
+
+function parsePaxRecords(bytes) {
+    var records = {};
+    var cursor = 0;
+    while (cursor < bytes.length) {
+        var space = bytes.indexOf(32, cursor);
+        if (space < 0) throw new Error("Invalid PAX record length");
+        var length = parseInt(utf8Decoder.decode(bytes.slice(cursor, space)), 10);
+        var recordEnd = cursor + length;
+        if (!Number.isInteger(length) || length <= 0 || recordEnd > bytes.length || bytes[recordEnd - 1] !== 10) {
+            throw new Error("Invalid PAX record");
+        }
+        var record = bytes.slice(space + 1, recordEnd - 1);
+        var equals = record.indexOf(61);
+        if (equals < 1) throw new Error("Invalid PAX key/value record");
+        var key = utf8Decoder.decode(record.slice(0, equals));
+        records[key] = utf8Decoder.decode(record.slice(equals + 1));
+        cursor = recordEnd;
+    }
+    return records;
+}
+
+function safeArchivePath(path) {
+    while (path.startsWith("./")) path = path.slice(2);
+    var parts = path.split("/");
+    if (!path || path.startsWith("/") || path.includes("\\") || parts.includes("..")) {
+        throw new Error("Unsafe archive path: " + path);
+    }
+    return path;
+}
+
 async function extractTarGz(buffer) {
     var ds = new DecompressionStream("gzip");
     var decompressed = new Response(new Blob([buffer]).stream().pipeThrough(ds));
     var data = new Uint8Array(await decompressed.arrayBuffer());
     var offset = 0;
+    var globalPax = {};
+    var nextPax = {};
     while (offset + 512 <= data.length) {
         var header = data.slice(offset, offset + 512);
         if (header.every(function(b) { return b === 0; })) break;
-        var nameBytes = header.slice(0, 100);
-        var nameEnd = nameBytes.indexOf(0);
-        var name = new TextDecoder().decode(nameEnd >= 0 ? nameBytes.slice(0, nameEnd) : nameBytes);
-        var sizeStr = new TextDecoder().decode(header.slice(124, 136)).replace(/\0/g, "").trim();
+        var name = readTarText(header.slice(0, 100));
+        var prefix = readTarText(header.slice(345, 500));
+        if (prefix) name = prefix + "/" + name;
+        var sizeStr = utf8Decoder.decode(header.slice(124, 136)).replace(/\0/g, "").trim();
         var size = parseInt(sizeStr, 8) || 0;
         var type = header[156];
         offset += 512;
-        if (name && name !== "./") {
-            var fullPath = "/usr/local/game/" + name.replace(/^\.\//, "");
-            if (type === 53 || name.endsWith("/")) {
-                ensureDir(fullPath);
-            } else {
-                var slash = fullPath.lastIndexOf("/");
-                var dir = fullPath.substring(0, slash);
-                var fname = fullPath.substring(slash + 1);
-                ensureDir(dir);
-                try { Module["FS_unlink"](fullPath); } catch(e) {}
-                Module["FS_createDataFile"](dir, fname, data.slice(offset, offset + size), true, true, true);
-            }
+
+        if (type === 120 || type === 103) {
+            var pax = parsePaxRecords(data.slice(offset, offset + size));
+            if (type === 103) globalPax = Object.assign(globalPax, pax);
+            else nextPax = pax;
+            offset += Math.ceil(size / 512) * 512;
+            continue;
+        }
+
+        var metadata = Object.assign({}, globalPax, nextPax);
+        nextPax = {};
+        if (metadata.path) name = metadata.path;
+        if (metadata.size) size = parseInt(metadata.size, 10);
+        name = safeArchivePath(name);
+        var fullPath = "/usr/local/game/" + name;
+
+        if (type === 53 || name.endsWith("/")) {
+            ensureDir(fullPath);
+        } else if (type === 0 || type === 48) {
+            var slash = fullPath.lastIndexOf("/");
+            var dir = fullPath.substring(0, slash);
+            var fname = fullPath.substring(slash + 1);
+            ensureDir(dir);
+            try { Module["FS_unlink"](fullPath); } catch(e) {}
+            Module["FS_createDataFile"](dir, fname, data.slice(offset, offset + size), true, true, true);
+        } else {
+            throw new Error("Unsupported tar entry type " + type + " for " + name);
         }
         offset += Math.ceil(size / 512) * 512;
     }

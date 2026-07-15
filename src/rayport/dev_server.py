@@ -10,6 +10,7 @@ from pathlib import Path
 from rayport.packager import decide_file, pack_game
 from rayport.html_generator import generate_html
 from rayport.runtime_files import RUNTIME_FILENAMES, find_runtime_dir
+from rayport.output import output_ignore_paths, prepare_output_dir
 
 LIVERELOAD_SCRIPT = """<script>
 (function() {
@@ -71,17 +72,22 @@ def make_handler(serve_dir):
 
 
 class FileWatcher:
-    def __init__(self, watch_dir, callback, interval=1.0):
+    def __init__(self, watch_dir, callback, interval=1.0, ignore_paths=()):
         self.watch_dir = Path(watch_dir).resolve()
         self.callback = callback
         self.interval = interval
+        self.ignore_paths = tuple(Path(path).resolve() for path in ignore_paths)
         self._stop = threading.Event()
         self._mtimes = self._scan()
 
     def _scan(self):
         mtimes = {}
         for root, dirs, files in os.walk(self.watch_dir):
-            dirs[:] = [d for d in dirs if d not in {".git", "__pycache__", ".venv", "venv"}]
+            dirs[:] = [
+                d for d in dirs
+                if d not in {".git", "__pycache__", ".venv", "venv"}
+                and (Path(root) / d).resolve() not in self.ignore_paths
+            ]
             for f in files:
                 p = Path(root) / f
                 try:
@@ -120,29 +126,31 @@ def run_dev(
     width=None,
     height=None,
     port=8080,
-    optimize=False,
     presentation="stretch",
     background="#1a1a2e",
     exclude=(),
     include=(),
+    force_output=False,
 ):
     global reload_version
 
     game_path = Path(game_dir).resolve()
     output_path = Path(output_dir).resolve()
     runtime_dir = find_runtime_dir()
+    if not (game_path / "main.py").is_file():
+        raise FileNotFoundError(f"main.py not found in {game_path}")
+
+    ignored_output = output_ignore_paths(game_path, output_path)
 
     print(f"Building from {game_path}...")
-    if output_path.exists():
-        shutil.rmtree(output_path)
-    output_path.mkdir(parents=True)
+    prepare_output_dir(game_path, output_path, force=force_output)
 
     pack_game(
         str(game_path),
         str(output_path / "game.tar.gz"),
-        optimize=optimize,
         exclude=exclude,
         include=include,
+        ignore_paths=ignored_output,
     )
     generate_html(
         str(output_path / "index.html"),
@@ -174,14 +182,14 @@ def run_dev(
         pack_game(
             str(game_path),
             str(output_path / "game.tar.gz"),
-            optimize=optimize,
             exclude=exclude,
             include=include,
+            ignore_paths=ignored_output,
         )
         reload_version += 1
         print(f"Repacked. Browser will reload. (v{reload_version})")
 
-    watcher = FileWatcher(str(game_path), on_change)
+    watcher = FileWatcher(str(game_path), on_change, ignore_paths=ignored_output)
     watcher.start()
     print(f"Watching {game_path} for changes...")
 

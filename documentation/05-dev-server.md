@@ -30,7 +30,7 @@
 
 ## FileWatcher
 
-基於輪詢的檔案監控，每秒掃描一次遊戲目錄所有檔案的 `st_mtime`，偵測新增、修改、刪除三種變化。只有通過 `rayport.toml` package 規則的變更會觸發重新打包；修改設定檔本身後需重啟 dev server。
+基於輪詢的檔案監控，每秒掃描一次遊戲目錄所有檔案的 `st_mtime`，偵測新增、修改、刪除三種變化。只有通過 `rayport.toml` package 規則的變更會觸發重新打包；若 output 位於 game project 內，FileWatcher 會直接略過該 subtree，避免生成檔造成 reload loop。修改設定檔本身後需重啟 dev server。
 
 以 daemon thread 執行，主執行緒結束時自動停止。
 
@@ -43,7 +43,7 @@
 - `--background`：覆寫頁面背景色
 - `--width` / `-W`、`--height` / `-H`：相容舊版的初始 canvas 尺寸，必須一起使用
 - `--port` / `-p`：server port（預設 8080）
-- `--optimize`：啟用資源優化
+- `--force-output`：明確允許取代沒有 `.rayport-output` marker 的非空 output
 
 ## 相關檔案
 

@@ -31,6 +31,12 @@ Build a game for web deployment:
 rayport build ./my-game/
 ```
 
+Generated directories contain a `.rayport-output` marker. Rayport refuses to
+delete a non-empty directory without that marker unless `--force-output` is
+passed explicitly. An output inside the game project (such as `dist/`) is
+automatically excluded from packaging and live reload. The output may never
+equal or contain the game source directory.
+
 Start a dev server with live reload:
 
 ```bash
@@ -43,6 +49,7 @@ Inspect exactly which files will be packaged:
 rayport inspect ./my-game/
 rayport inspect ./my-game/ --excluded
 rayport inspect ./my-game/ --explain tests/test_game.py
+rayport inspect ./my-game/ --sizes
 ```
 
 ## Project configuration
@@ -79,6 +86,12 @@ the canvas's CSS presentation size. Command-line options override `rayport.toml`
 which overrides Rayport defaults.
 
 `rayport.toml` is packaging metadata and is not included in `game.tar.gz`.
+
+Rayport packages assets exactly as provided. It never converts image or audio
+formats implicitly. Use `rayport inspect GAME --sizes` for a read-only report of
+the largest packaged files. This report is opt-in and is not run automatically
+after `rayport build` or during `rayport dev`. Optimize source assets explicitly
+in your own asset pipeline when needed.
 
 Installed distributions include the prebuilt runtime under
 `share/rayport/runtime`. For a custom runtime, set the `RAYPORT_RUNTIME`

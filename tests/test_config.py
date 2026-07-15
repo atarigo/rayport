@@ -2,10 +2,15 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from rayport.cli import format_size
 from rayport.config import ConfigError, load_config
 
 
 class ConfigTests(unittest.TestCase):
+    def test_human_readable_sizes(self):
+        self.assertEqual(format_size(12), "12 B")
+        self.assertEqual(format_size(1536), "1.5 KiB")
+
     def test_defaults_when_config_is_missing(self):
         with tempfile.TemporaryDirectory() as tmp:
             config = load_config(tmp)

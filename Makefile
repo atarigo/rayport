@@ -45,7 +45,7 @@ PRELOAD_RAYLIB  = $(BUILD_DIR)/usr/local/lib/python3.12/raylib
 
 # --- Local development defaults ---
 GAME            ?= examples/breakout
-OUTPUT          ?= build
+OUTPUT          ?= build/rayport-dev
 PORT            ?= 8080
 
 .DEFAULT_GOAL := help

@@ -34,6 +34,16 @@ class HtmlGeneratorTests(unittest.TestCase):
         self.assertIn('presentationMode === "pixel-perfect"', content)
         self.assertIn("Math.min(window.innerWidth", content)
 
+    def test_pax_paths_and_unsafe_paths_are_handled(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            output = Path(tmp, "index.html")
+            generate_html(str(output))
+            content = output.read_text(encoding="utf-8")
+        self.assertIn("function parsePaxRecords(bytes)", content)
+        self.assertIn("if (metadata.path) name = metadata.path", content)
+        self.assertIn('parts.includes("..")', content)
+        self.assertIn("Unsupported tar entry type", content)
+
     def test_width_and_height_must_be_paired(self):
         with tempfile.TemporaryDirectory() as tmp:
             with self.assertRaisesRegex(ValueError, "provided together"):

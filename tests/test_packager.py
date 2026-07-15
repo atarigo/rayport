@@ -1,3 +1,4 @@
+import gzip
 import tarfile
 import tempfile
 import unittest
@@ -63,6 +64,22 @@ class PackagerTests(unittest.TestCase):
             (game / "main.py").write_text("pass\n")
             with self.assertRaisesRegex(ValueError, "main.py cannot be excluded"):
                 pack_game(str(game), str(game / "game.tar.gz"), exclude=("*.py",))
+
+    def test_long_paths_are_written_with_pax_metadata(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            game = root / "game"
+            game.mkdir()
+            (game / "main.py").write_text("pass\n")
+            long_name = "a" * 110 + ".png"
+            (game / long_name).write_bytes(b"image")
+            output = root / "game.tar.gz"
+            pack_game(str(game), str(output))
+            raw_tar = gzip.open(output, "rb").read()
+            with tarfile.open(output) as archive:
+                names = archive.getnames()
+        self.assertIn(long_name, names)
+        self.assertIn(b"././@PaxHeader", raw_tar)
 
 
 if __name__ == "__main__":

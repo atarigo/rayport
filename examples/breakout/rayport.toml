@@ -1,0 +1,13 @@
+config-version = 1
+
+[web]
+title = "Breakout"
+presentation = "stretch"
+background = "#1a1a2e"
+
+[package]
+exclude = [
+    "tests/**",
+    "debug/**",
+    "screenshots/**",
+]

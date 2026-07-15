@@ -17,7 +17,7 @@
 1. 執行一次完整建置（打包遊戲、產生 HTML、複製 runtime 檔案到 output 目錄）
 2. 啟動 `FileWatcher`，每秒掃描遊戲目錄的檔案修改時間
 3. 啟動 HTTP server，開啟瀏覽器
-4. 檔案變動時自動重新打包 `game.tar.gz`，遞增 reload version
+4. 被納入 package 的檔案變動時自動重新打包 `game.tar.gz`，遞增 reload version
 5. 瀏覽器端的 JS 每秒輪詢 `/__reload` endpoint，偵測到 version 變化時重新載入頁面
 
 ## HTTP server 的特殊處理
@@ -30,7 +30,7 @@
 
 ## FileWatcher
 
-基於輪詢的檔案監控，每秒掃描一次遊戲目錄所有檔案的 `st_mtime`。偵測新增、修改、刪除三種變化。跳過 `.git`、`__pycache__`、`.venv`、`venv` 目錄。
+基於輪詢的檔案監控，每秒掃描一次遊戲目錄所有檔案的 `st_mtime`，偵測新增、修改、刪除三種變化。只有通過 `rayport.toml` package 規則的變更會觸發重新打包；修改設定檔本身後需重啟 dev server。
 
 以 daemon thread 執行，主執行緒結束時自動停止。
 
@@ -38,9 +38,10 @@
 
 - `game_dir`：遊戲專案目錄路徑
 - `--output` / `-o`：輸出目錄（預設 `build`）
-- `--title` / `-t`：遊戲標題（預設 `rayport game`）
-- `--width` / `-W`：canvas 寬度（預設 800）
-- `--height` / `-H`：canvas 高度（預設 450）
+- `--title` / `-t`：覆寫遊戲標題
+- `--presentation`：覆寫 canvas presentation mode
+- `--background`：覆寫頁面背景色
+- `--width` / `-W`、`--height` / `-H`：相容舊版的初始 canvas 尺寸，必須一起使用
 - `--port` / `-p`：server port（預設 8080）
 - `--optimize`：啟用資源優化
 

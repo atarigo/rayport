@@ -7,8 +7,9 @@ import time
 import webbrowser
 from pathlib import Path
 
-from rayport.packager import pack_game
+from rayport.packager import decide_file, pack_game
 from rayport.html_generator import generate_html
+from rayport.runtime_files import RUNTIME_FILENAMES, find_runtime_dir
 
 LIVERELOAD_SCRIPT = """<script>
 (function() {
@@ -112,34 +113,71 @@ class FileWatcher:
         self._stop.set()
 
 
-def run_dev(game_dir, output_dir="build", title="rayport game", width=800, height=450, port=8080, optimize=False):
+def run_dev(
+    game_dir,
+    output_dir="build",
+    title="rayport game",
+    width=None,
+    height=None,
+    port=8080,
+    optimize=False,
+    presentation="stretch",
+    background="#1a1a2e",
+    exclude=(),
+    include=(),
+):
     global reload_version
 
     game_path = Path(game_dir).resolve()
     output_path = Path(output_dir).resolve()
-    runtime_dir = Path(__file__).parent.parent.parent / "runtime"
+    runtime_dir = find_runtime_dir()
 
     print(f"Building from {game_path}...")
     if output_path.exists():
         shutil.rmtree(output_path)
     output_path.mkdir(parents=True)
 
-    pack_game(str(game_path), str(output_path / "game.tar.gz"), optimize=optimize)
-    generate_html(str(output_path / "index.html"), title=title, width=width, height=height)
-    for fname in ["main.wasm", "main.js", "main.data"]:
+    pack_game(
+        str(game_path),
+        str(output_path / "game.tar.gz"),
+        optimize=optimize,
+        exclude=exclude,
+        include=include,
+    )
+    generate_html(
+        str(output_path / "index.html"),
+        title=title,
+        width=width,
+        height=height,
+        presentation=presentation,
+        background=background,
+    )
+    for fname in RUNTIME_FILENAMES:
         src = runtime_dir / fname
-        if not src.exists():
-            raise FileNotFoundError(f"Runtime file not found: {src}\nRun 'make runtime' first.")
         shutil.copy2(src, output_path / fname)
 
     print("Build complete.")
 
     def on_change(changed):
         global reload_version
-        rel_paths = [str(Path(p).relative_to(game_path)) for p in changed if str(game_path) in p]
-        if rel_paths:
-            print(f"Changed: {', '.join(rel_paths[:5])}")
-        pack_game(str(game_path), str(output_path / "game.tar.gz"), optimize=optimize)
+        rel_paths = []
+        for changed_path in changed:
+            try:
+                relative = Path(changed_path).relative_to(game_path).as_posix()
+            except ValueError:
+                continue
+            if decide_file(relative, exclude=exclude, include=include).included:
+                rel_paths.append(relative)
+        if not rel_paths:
+            return
+        print(f"Changed: {', '.join(rel_paths[:5])}")
+        pack_game(
+            str(game_path),
+            str(output_path / "game.tar.gz"),
+            optimize=optimize,
+            exclude=exclude,
+            include=include,
+        )
         reload_version += 1
         print(f"Repacked. Browser will reload. (v{reload_version})")
 

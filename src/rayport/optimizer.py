@@ -1,9 +1,9 @@
-import os
 import shutil
 import subprocess
 from pathlib import Path
 
-SKIP_DIRS = {".git", "__pycache__", ".venv", "venv", "node_modules", "build", ".mypy_cache", ".pytest_cache"}
+from rayport.packager import inspect_game
+
 PNG_EXTENSIONS = {".png"}
 AUDIO_EXTENSIONS = {".wav", ".mp3"}
 
@@ -50,26 +50,25 @@ def _convert_audio(src: Path, dst: Path) -> bool:
     return result.returncode == 0
 
 
-def optimize_assets(source_dir: str, output_dir: str) -> None:
+def optimize_assets(source_dir: str, output_dir: str, exclude=(), include=()) -> None:
     source_path = Path(source_dir).resolve()
     output_path = Path(output_dir).resolve()
 
-    for root, dirs, files in os.walk(source_path):
-        dirs[:] = [d for d in dirs if d not in SKIP_DIRS and not d.startswith(".")]
-        for filename in sorted(files):
-            src = Path(root) / filename
-            rel = src.relative_to(source_path)
-            dst = output_path / rel
-            ext = src.suffix.lower()
+    for decision in inspect_game(str(source_path), exclude=exclude, include=include):
+        if not decision.included:
+            continue
+        src = source_path / decision.path
+        dst = output_path / decision.path
+        ext = src.suffix.lower()
 
-            if ext in PNG_EXTENSIONS:
-                if not _optimize_png(src, dst):
-                    dst.parent.mkdir(parents=True, exist_ok=True)
-                    shutil.copy2(src, dst)
-            elif ext in AUDIO_EXTENSIONS:
-                if not _convert_audio(src, dst):
-                    dst.parent.mkdir(parents=True, exist_ok=True)
-                    shutil.copy2(src, dst)
-            else:
+        if ext in PNG_EXTENSIONS:
+            if not _optimize_png(src, dst):
                 dst.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(src, dst)
+        elif ext in AUDIO_EXTENSIONS:
+            if not _convert_audio(src, dst):
+                dst.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(src, dst)
+        else:
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(src, dst)

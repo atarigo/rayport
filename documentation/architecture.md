@@ -82,9 +82,12 @@ wasm 用的 `__init__.py` 改為：
 ## 目錄結構
 
 - `src/rayport/`：Python CLI 工具原始碼
+- `rayport.toml`：每個遊戲可選用的 Web presentation 與 package 規則設定檔
 - `runtime/`：預編譯的 wasm 檔案（`main.wasm`、`main.js`、`main.data`），隨工具發佈
 - `stubs/`：建置用的 C stub 和輔助腳本（`gen_cffi.py`、`web_stubs.c`、`ffi_type_stubs.c`、`launcher.py`）
 - `.cache/`：建置中間產物（gitignored）
+
+source checkout 直接使用根目錄的 `runtime/`。wheel 安裝時，三個 runtime artifacts 會放在 Python environment 的 `share/rayport/runtime/`；也可用 `RAYPORT_RUNTIME` environment variable 指向自訂 runtime。
 
 ## 已知限制
 

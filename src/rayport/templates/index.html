@@ -6,12 +6,14 @@
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
-    background: #1a1a2e;
+    background: $background;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    width: 100vw;
     height: 100vh;
+    height: 100dvh;
     overflow: hidden;
     font-family: system-ui, sans-serif;
     color: #eee;
@@ -39,7 +41,7 @@ body {
     transition: width 0.2s;
 }
 #status { font-size: 14px; opacity: 0.7; }
-canvas { display: block; width: 100vw; height: 100vh; }
+canvas { display: block; }
 </style>
 </head>
 <body>
@@ -47,12 +49,78 @@ canvas { display: block; width: 100vw; height: 100vh; }
     <div id="status">Loading...</div>
     <div id="progress-bar"><div id="progress-fill"></div></div>
 </div>
-<canvas id="canvas" oncontextmenu="event.preventDefault()" style="display:none"></canvas>
+<canvas id="canvas"$canvas_size oncontextmenu="event.preventDefault()" style="display:none"></canvas>
 <script>
 var progressFill = document.getElementById("progress-fill");
 var statusText = document.getElementById("status");
 var loadingDiv = document.getElementById("loading");
 var canvasEl = document.getElementById("canvas");
+var presentationMode = $presentation;
+
+function applyCanvasPresentation() {
+    if (presentationMode === "stretch") {
+        canvasEl.style.width = "100vw";
+        canvasEl.style.height = CSS.supports("height", "100dvh") ? "100dvh" : "100vh";
+        canvasEl.style.imageRendering = "auto";
+        return;
+    }
+    if (presentationMode === "native") {
+        canvasEl.style.width = "";
+        canvasEl.style.height = "";
+        canvasEl.style.imageRendering = "auto";
+        return;
+    }
+
+    var renderWidth = canvasEl.width || 1;
+    var renderHeight = canvasEl.height || 1;
+    var scale = Math.min(window.innerWidth / renderWidth, window.innerHeight / renderHeight);
+    if (presentationMode === "pixel-perfect" && scale >= 1) {
+        scale = Math.max(1, Math.floor(scale));
+        canvasEl.style.imageRendering = "pixelated";
+    } else {
+        canvasEl.style.imageRendering = "auto";
+    }
+    canvasEl.style.width = Math.max(1, Math.floor(renderWidth * scale)) + "px";
+    canvasEl.style.height = Math.max(1, Math.floor(renderHeight * scale)) + "px";
+}
+
+window.addEventListener("resize", applyCanvasPresentation);
+if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", applyCanvasPresentation);
+}
+new MutationObserver(applyCanvasPresentation).observe(canvasEl, {
+    attributes: true,
+    attributeFilter: ["width", "height"]
+});
+
+function installInputScaling() {
+    if (typeof Browser === "undefined" || typeof GLFW === "undefined" || !GLFW.active) {
+        return false;
+    }
+
+    // Emscripten's GLFW backend reports CSS pixels after it replaces
+    // Browser.calculateMouseCoords(). Map those pixels back to raylib's
+    // logical window so input follows every CSS presentation mode.
+    Browser.calculateMouseCoords = function(pageX, pageY) {
+        var rect = canvasEl.getBoundingClientRect();
+        var scrollX = typeof window.scrollX !== "undefined" ? window.scrollX : window.pageXOffset;
+        var scrollY = typeof window.scrollY !== "undefined" ? window.scrollY : window.pageYOffset;
+        var logicalWidth = GLFW.active.width || canvasEl.width;
+        var logicalHeight = GLFW.active.height || canvasEl.height;
+        return {
+            x: (pageX - (scrollX + rect.left)) * logicalWidth / rect.width,
+            y: (pageY - (scrollY + rect.top)) * logicalHeight / rect.height
+        };
+    };
+    return true;
+}
+
+function finalizeCanvasSetup() {
+    applyCanvasPresentation();
+    if (!installInputScaling()) {
+        window.requestAnimationFrame(finalizeCanvasSetup);
+    }
+}
 
 function updateProgress(pct, msg) {
     progressFill.style.width = pct + "%";
@@ -87,7 +155,7 @@ async function extractTarGz(buffer) {
             var fullPath = "/usr/local/game/" + name.replace(/^\.\//, "");
             if (type === 53 || name.endsWith("/")) {
                 ensureDir(fullPath);
-            } else if (size > 0) {
+            } else {
                 var slash = fullPath.lastIndexOf("/");
                 var dir = fullPath.substring(0, slash);
                 var fname = fullPath.substring(slash + 1);
@@ -123,12 +191,7 @@ var Module = {
     onRuntimeInitialized: function() {
         loadingDiv.classList.add("hidden");
         canvasEl.style.display = "block";
-        function resizeCanvas() {
-            canvasEl.width = window.innerWidth;
-            canvasEl.height = window.innerHeight;
-        }
-        resizeCanvas();
-        window.addEventListener("resize", resizeCanvas);
+        window.requestAnimationFrame(finalizeCanvasSetup);
     }
 };
 </script>

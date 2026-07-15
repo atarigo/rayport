@@ -13,3 +13,9 @@ rayport = "rayport.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+rayport = ["templates/*.html"]
+
+[tool.setuptools.data-files]
+"share/rayport/runtime" = ["runtime/main.wasm", "runtime/main.js", "runtime/main.data"]

@@ -43,11 +43,34 @@ CFFI_C          = $(CACHE)/_raylib_cffi.c
 STUBS           = stubs
 PRELOAD_RAYLIB  = $(BUILD_DIR)/usr/local/lib/python3.12/raylib
 
-.DEFAULT_GOAL := runtime
+# --- Local development defaults ---
+GAME            ?= examples/breakout
+OUTPUT          ?= build
+PORT            ?= 8080
+
+.DEFAULT_GOAL := help
 
 .PHONY: help
 help: ## Show available commands
-	@grep -E '^[a-zA-Z_-]+:.*##' $(MAKEFILE_LIST) | awk -F ':.*## ' '{printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
+	@awk 'BEGIN { \
+		printf "Usage: make <target>\n\nAvailable targets:\n"; \
+	} \
+	/^[a-zA-Z_-]+:.*##/ { \
+		split($$0, parts, /:.*## /); \
+		printf "  \033[36m%-20s\033[0m %s\n", parts[1], parts[2]; \
+		count++; \
+	} \
+	END { \
+		printf "\n%d available targets.\n", count; \
+	}' $(MAKEFILE_LIST)
+
+.PHONY: test
+test: ## 執行 Python 自動化測試
+	uv run python -m unittest discover -s tests -v
+
+.PHONY: dev
+dev: ## 啟動範例遊戲開發伺服器（GAME、OUTPUT、PORT 可覆寫）
+	uv run rayport dev $(GAME) --output $(OUTPUT) --port $(PORT)
 
 # =============================================================================
 # 主要目標：完整建置並將產物複製到 runtime/

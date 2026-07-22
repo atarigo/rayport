@@ -1,5 +1,4 @@
 import argparse
-import shutil
 from pathlib import Path
 
 from rayport.config import ConfigError, PRESENTATION_MODES, load_config, validate_web_values
@@ -7,7 +6,7 @@ from rayport.packager import pack_game
 from rayport.packager import decide_file, inspect_game
 from rayport.html_generator import generate_html
 from rayport.dev_server import run_dev
-from rayport.runtime_files import RUNTIME_FILENAMES, find_runtime_dir
+from rayport.runtime_files import copy_runtime_distribution, find_runtime_dir
 from rayport.output import output_ignore_paths, prepare_output_dir
 
 
@@ -60,12 +59,11 @@ def cmd_build(args):
     )
 
     print("Copying runtime files...")
-    for fname in RUNTIME_FILENAMES:
-        src = runtime_dir / fname
-        shutil.copy2(src, output_dir / fname)
+    copy_runtime_distribution(runtime_dir, output_dir)
 
     print(f"Build complete: {output_dir}/")
-    print(f"  index.html, main.wasm, main.js, main.data, game.tar.gz")
+    print("  index.html, main.wasm, main.js, main.data, game.tar.gz")
+    print("  rayport-licenses/LICENSE, rayport-licenses/THIRD_PARTY_NOTICES.md")
 
 
 def cmd_dev(args):

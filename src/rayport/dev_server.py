@@ -1,7 +1,6 @@
 import http.server
 import json
 import os
-import shutil
 import threading
 import time
 import webbrowser
@@ -9,7 +8,7 @@ from pathlib import Path
 
 from rayport.packager import decide_file, pack_game
 from rayport.html_generator import generate_html
-from rayport.runtime_files import RUNTIME_FILENAMES, find_runtime_dir
+from rayport.runtime_files import copy_runtime_distribution, find_runtime_dir
 from rayport.output import output_ignore_paths, prepare_output_dir
 
 LIVERELOAD_SCRIPT = """<script>
@@ -160,9 +159,7 @@ def run_dev(
         presentation=presentation,
         background=background,
     )
-    for fname in RUNTIME_FILENAMES:
-        src = runtime_dir / fname
-        shutil.copy2(src, output_path / fname)
+    copy_runtime_distribution(runtime_dir, output_path)
 
     print("Build complete.")
 

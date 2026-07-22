@@ -1,3 +1,8 @@
+# Portions adapted from raylib-python-cffi's raylib/build.py.
+# Copyright (c) 2021 Richard Smith and others.
+# Licensed under the Eclipse Public License 2.0.
+# SPDX-License-Identifier: EPL-2.0
+
 import sys, os, subprocess, re
 from cffi import FFI
 

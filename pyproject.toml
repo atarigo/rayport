@@ -3,11 +3,12 @@ name = "rayport"
 version = "0.2.1"
 description = "Package raylib Python games for the web"
 readme = "README.md"
+license = "EPL-2.0"
+license-files = ["LICENSE"]
 requires-python = ">=3.13"
 dependencies = [
     "cffi>=2.1.0",
 ]
-
 [project.scripts]
 rayport = "rayport.cli:main"
 
@@ -18,4 +19,10 @@ where = ["src"]
 rayport = ["templates/*.html"]
 
 [tool.setuptools.data-files]
-"share/rayport/runtime" = ["runtime/main.wasm", "runtime/main.js", "runtime/main.data"]
+"share/rayport/runtime" = [
+    "runtime/main.wasm",
+    "runtime/main.js",
+    "runtime/main.data",
+    "LICENSE",
+    "THIRD_PARTY_NOTICES.md",
+]

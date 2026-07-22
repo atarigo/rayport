@@ -106,7 +106,8 @@ See [documentation/](documentation/README.md) for architecture details and modul
 
 Rayport is licensed under the Eclipse Public License 2.0. Generated web builds
 include `rayport-licenses/LICENSE` and
-`rayport-licenses/THIRD_PARTY_NOTICES.md` for the bundled runtime.
+`rayport-licenses/THIRD_PARTY_NOTICES.md` plus the referenced license texts for
+the bundled runtime.
 Rayport's license does not apply to an independent game merely packaged by the
 tool. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for the raylib and
 raylib-python-cffi notices and source locations.

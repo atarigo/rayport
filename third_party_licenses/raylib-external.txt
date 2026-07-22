@@ -1,0 +1,97 @@
+raylib 5.5 compiles several bundled single-file libraries into libraylib.
+The notices below cover the libraries enabled by Rayport's default web build.
+
+MIT-licensed components
+=======================
+
+tinyobj_loader_c
+Copyright (c) 2016-2019 Syoyo Fujita and many contributors.
+
+cgltf
+Copyright (c) 2018-2021 Johannes Kuhlmann.
+
+vox_loader
+Copyright (c) 2021 Johann Nadalutti.
+
+Model 3D (m3d)
+Copyright (c) 2020 bzt (bztsrc@gitlab).
+
+par_shapes
+Copyright (c) 2019 Philip Rideout.
+
+QOI and QOA
+Copyright (c) 2021 Dominic Szablewski (QOI).
+Copyright (c) 2023 Dominic Szablewski (QOA).
+
+qoaplay
+Copyright (c) 2023 Dominic Szablewski (@phoboslab), reviewed by
+Ramon Santamaria (@raysan5).
+
+stb_image, stb_image_resize2, stb_image_write, stb_perlin,
+stb_rect_pack, stb_truetype, and stb_vorbis
+Copyright (c) 2017 Sean Barrett. These components offer a choice of the
+MIT license or public-domain dedication; this distribution uses the MIT option.
+
+sinfl and sdefl
+Copyright (c) 2020-2023 Micha Mettke. These components offer a choice of the
+MIT license or public-domain dedication; this distribution uses the MIT option.
+
+msf_gif
+Copyright (c) 2021 Miles Fogle. This component offers a choice of the MIT
+license or public-domain dedication; this distribution uses the MIT option.
+
+MIT License
+-----------
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+MIT No Attribution / public-domain components
+==============================================
+
+miniaudio, dr_wav, and dr_mp3
+Copyright 2023 David Reid.
+
+These components offer a choice of public-domain dedication or the MIT No
+Attribution license. Rayport uses the MIT No Attribution option. Its terms are:
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+of the Software, and to permit persons to whom the Software is furnished to do
+so.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+Other permissive components
+===========================
+
+jar_xm contains work by Romain "Artefact2" Dalmaso, Dan Spencer, and Joshua
+Adam Reisenauer. jar_mod contains work by Jean-François DEL NERO and Joshua
+Adam Reisenauer. Both are distributed under the Do What The Fuck You Want To
+Public License, Version 2.
+
+rl_gputex and rprand are distributed under raylib's zlib/libpng license and
+are covered by the raylib notice in THIRD_PARTY_NOTICES.md.

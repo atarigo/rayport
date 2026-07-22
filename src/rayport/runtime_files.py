@@ -8,6 +8,7 @@ import sysconfig
 
 RUNTIME_FILENAMES = ("main.wasm", "main.js", "main.data")
 NOTICE_FILENAMES = ("LICENSE", "THIRD_PARTY_NOTICES.md")
+THIRD_PARTY_LICENSE_DIRNAME = "third_party_licenses"
 
 
 def _is_runtime_dir(path: Path) -> bool:
@@ -44,7 +45,10 @@ def find_notice_dir(runtime_dir: Path) -> Path:
     package_dir = Path(__file__).resolve().parent
     candidates = (runtime_dir, package_dir.parent.parent)
     for candidate in candidates:
-        if all((candidate / filename).is_file() for filename in NOTICE_FILENAMES):
+        if (
+            all((candidate / filename).is_file() for filename in NOTICE_FILENAMES)
+            and (candidate / THIRD_PARTY_LICENSE_DIRNAME).is_dir()
+        ):
             return candidate
 
     checked = "\n  ".join(str(path) for path in candidates)
@@ -64,3 +68,8 @@ def copy_runtime_distribution(runtime_dir: Path, output_dir: Path) -> None:
     output_notice_dir.mkdir(exist_ok=True)
     for filename in NOTICE_FILENAMES:
         shutil.copy2(notice_dir / filename, output_notice_dir / filename)
+    shutil.copytree(
+        notice_dir / THIRD_PARTY_LICENSE_DIRNAME,
+        output_notice_dir / THIRD_PARTY_LICENSE_DIRNAME,
+        dirs_exist_ok=True,
+    )

@@ -7,6 +7,7 @@ from unittest.mock import patch
 from rayport.runtime_files import (
     NOTICE_FILENAMES,
     RUNTIME_FILENAMES,
+    THIRD_PARTY_LICENSE_DIRNAME,
     copy_runtime_distribution,
     find_runtime_dir,
 )
@@ -36,6 +37,9 @@ class RuntimeFilesTests(unittest.TestCase):
             output.mkdir()
             for filename in (*RUNTIME_FILENAMES, *NOTICE_FILENAMES):
                 (runtime / filename).write_text(filename)
+            licenses = runtime / THIRD_PARTY_LICENSE_DIRNAME
+            licenses.mkdir()
+            (licenses / "dependency.txt").write_text("license")
 
             copy_runtime_distribution(runtime, output)
 
@@ -45,7 +49,11 @@ class RuntimeFilesTests(unittest.TestCase):
             )
             self.assertEqual(
                 sorted(path.name for path in (output / "rayport-licenses").iterdir()),
-                sorted(NOTICE_FILENAMES),
+                sorted((*NOTICE_FILENAMES, THIRD_PARTY_LICENSE_DIRNAME)),
+            )
+            self.assertEqual(
+                (output / "rayport-licenses" / THIRD_PARTY_LICENSE_DIRNAME / "dependency.txt").read_text(),
+                "license",
             )
 
 

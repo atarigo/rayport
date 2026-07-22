@@ -26,3 +26,4 @@ rayport = ["templates/*.html"]
     "LICENSE",
     "THIRD_PARTY_NOTICES.md",
 ]
+"share/rayport/runtime/third_party_licenses" = ["third_party_licenses/*.txt"]

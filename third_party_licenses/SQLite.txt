@@ -1,0 +1,9 @@
+SQLite is in the public domain.
+
+The SQLite project publishes the following blessing:
+
+May you do good and not evil.
+May you find forgiveness for yourself and forgive others.
+May you share freely, never taking more than you give.
+
+Source: https://www.sqlite.org/copyright.html

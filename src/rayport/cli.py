@@ -41,13 +41,26 @@ def cmd_build(args):
     prepare_output_dir(game_dir, output_dir, force=args.force_output)
 
     print(f"Packing game from {game_dir}...")
-    pack_game(
+    dependencies = pack_game(
         str(game_dir),
         str(output_dir / "game.tar.gz"),
         exclude=config.package.exclude,
         include=config.package.include,
         ignore_paths=ignored_output,
     )
+    if dependencies:
+        names = ", ".join(
+            f"{dependency.import_name} "
+            f"({dependency.distribution_name} {dependency.version})"
+            for dependency in dependencies
+        )
+        print(f"Bundled Python dependencies: {names}")
+        for dependency in dependencies:
+            if dependency.skipped_native_files:
+                print(
+                    f"  {dependency.distribution_name}: skipped "
+                    f"{len(dependency.skipped_native_files)} native extension file(s)"
+                )
 
     print("Generating index.html...")
     generate_html(

@@ -109,9 +109,15 @@ options override `rayport.toml`, which overrides Rayport defaults.
 - Images, audio, and other assets are packaged without conversion.
 - Symbolic links, FIFOs, sockets, devices, and other non-regular files are
   rejected when they would be included.
-- Python packages installed on the host are not copied automatically. Pure
-  Python packages can be included inside the game directory; native extension
-  modules such as `.so` and `.pyd` cannot run in the WebAssembly runtime.
+- Rayport follows imports reachable from `main.py` and copies required pure
+  Python packages from the game's `.venv` or `venv`.
+- Install the game's dependencies before building. Missing packages are
+  reported during the build instead of failing later in the browser.
+- Native extension files such as `.so` and `.pyd` are skipped because they
+  cannot run in the WebAssembly runtime. Packages with a pure Python fallback,
+  including PyYAML, can still work.
+- Dependency versions, skipped native files, and available license files are
+  recorded inside `game.tar.gz` under `.rayport/`.
 
 ## Compatibility
 

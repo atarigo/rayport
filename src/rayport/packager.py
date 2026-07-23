@@ -2,9 +2,13 @@ import tarfile
 import os
 from dataclasses import dataclass
 from fnmatch import fnmatchcase
+import io
+import json
 from pathlib import Path
 import re
 import stat
+
+from rayport.dependencies import BundledDependency, collect_bundled_dependencies
 
 DEFAULT_EXCLUDE = (
     ".*",
@@ -152,7 +156,7 @@ def pack_game(
     exclude: tuple[str, ...] = (),
     include: tuple[str, ...] = (),
     ignore_paths: tuple[str | Path, ...] = (),
-) -> None:
+) -> tuple[BundledDependency, ...]:
     game_path = Path(game_dir).resolve()
     if not game_path.is_dir():
         raise FileNotFoundError(f"Game directory not found: {game_dir}")
@@ -170,6 +174,14 @@ def pack_game(
         include=include,
         ignore_paths=ignore_paths,
     )
+    included_paths = tuple(
+        decision.path
+        for decision in decisions
+        if decision.included
+    )
+    dependencies = collect_bundled_dependencies(game_path, included_paths)
+    game_archive_paths = set(included_paths)
+
     with tarfile.open(output_path, "w:gz") as tar:
         for decision in decisions:
             source_file = game_path / decision.path
@@ -178,3 +190,34 @@ def pack_game(
                 if entry_type != "regular file":
                     _raise_unsupported_entries([(decision.path, entry_type)])
                 tar.add(source_file, arcname=decision.path, recursive=False)
+        for dependency in dependencies:
+            for dependency_file in (*dependency.files, *dependency.license_files):
+                if dependency_file.archive_path in game_archive_paths:
+                    raise ValueError(
+                        "Python dependency file conflicts with a game file: "
+                        f"{dependency_file.archive_path}"
+                    )
+                tar.add(
+                    dependency_file.source,
+                    arcname=dependency_file.archive_path,
+                    recursive=False,
+                )
+                game_archive_paths.add(dependency_file.archive_path)
+        if dependencies:
+            manifest = {
+                "dependencies": [
+                    {
+                        "import": dependency.import_name,
+                        "distribution": dependency.distribution_name,
+                        "version": dependency.version,
+                        "skipped_native_files": list(dependency.skipped_native_files),
+                    }
+                    for dependency in dependencies
+                ]
+            }
+            payload = (json.dumps(manifest, indent=2, sort_keys=True) + "\n").encode()
+            info = tarfile.TarInfo(".rayport/dependencies.json")
+            info.size = len(payload)
+            info.mode = 0o644
+            tar.addfile(info, io.BytesIO(payload))
+    return dependencies

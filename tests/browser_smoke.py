@@ -35,6 +35,15 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("output", type=Path)
     parser.add_argument("--artifacts", type=Path, required=True)
+    parser.add_argument(
+        "--startup-only",
+        action="store_true",
+        help="Verify startup and browser errors without checking the Breakout pixel",
+    )
+    parser.add_argument(
+        "--press-key",
+        help="Press one Playwright keyboard key after startup, then check for errors",
+    )
     args = parser.parse_args()
 
     output = args.output.resolve()
@@ -105,27 +114,35 @@ def main() -> None:
                     }""",
                     timeout=60_000,
                 )
-                page.wait_for_function(
-                    """() => {
-                        const canvas = document.getElementById("canvas");
-                        const gl = canvas.getContext("webgl2") || canvas.getContext("webgl");
-                        if (!gl) return false;
-                        const pixel = new Uint8Array(4);
-                        gl.readPixels(50, 540, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
-                        window.__rayportSmokePixel = Array.from(pixel);
-                        return pixel[0] > 100 && pixel[1] < 100 && pixel[2] < 100;
-                    }""",
-                    timeout=10_000,
-                )
+                if not args.startup_only:
+                    page.wait_for_function(
+                        """() => {
+                            const canvas = document.getElementById("canvas");
+                            const gl = canvas.getContext("webgl2") || canvas.getContext("webgl");
+                            if (!gl) return false;
+                            const pixel = new Uint8Array(4);
+                            gl.readPixels(50, 540, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+                            window.__rayportSmokePixel = Array.from(pixel);
+                            return pixel[0] > 100 && pixel[1] < 100 && pixel[2] < 100;
+                        }""",
+                        timeout=10_000,
+                    )
                 page.wait_for_timeout(1_000)
+                if args.press_key:
+                    page.locator("#canvas").click()
+                    page.keyboard.press(args.press_key, delay=100)
+                    page.wait_for_timeout(2_000)
                 save_screenshot(page, artifacts / "browser-smoke.png")
                 if failures:
                     raise AssertionError("\n".join(failures))
-                pixel = page.evaluate("() => window.__rayportSmokePixel")
-                print(
-                    "Chromium loaded WebAssembly and rendered Breakout at 800x600 "
-                    f"(brick pixel {pixel})."
-                )
+                if args.startup_only:
+                    print("Chromium loaded WebAssembly and started the game at 800x600.")
+                else:
+                    pixel = page.evaluate("() => window.__rayportSmokePixel")
+                    print(
+                        "Chromium loaded WebAssembly and rendered Breakout at 800x600 "
+                        f"(brick pixel {pixel})."
+                    )
             except Exception:
                 save_screenshot(page, artifacts / "browser-smoke-failure.png")
                 raise

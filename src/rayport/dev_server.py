@@ -144,13 +144,26 @@ def run_dev(
     print(f"Building from {game_path}...")
     prepare_output_dir(game_path, output_path, force=force_output)
 
-    pack_game(
+    dependencies = pack_game(
         str(game_path),
         str(output_path / "game.tar.gz"),
         exclude=exclude,
         include=include,
         ignore_paths=ignored_output,
     )
+    if dependencies:
+        names = ", ".join(
+            f"{dependency.import_name} "
+            f"({dependency.distribution_name} {dependency.version})"
+            for dependency in dependencies
+        )
+        print(f"Bundled Python dependencies: {names}")
+        for dependency in dependencies:
+            if dependency.skipped_native_files:
+                print(
+                    f"  {dependency.distribution_name}: skipped "
+                    f"{len(dependency.skipped_native_files)} native extension file(s)"
+                )
     generate_html(
         str(output_path / "index.html"),
         title=title,

@@ -101,4 +101,7 @@ wasm 內的 Python 直譯器不支援：
 
 這些限制不影響 raylib 遊戲，因為 raylib 的圖形、輸入、音訊都透過已編譯進 wasm 的 C 引擎運作。
 
-遊戲碼只能使用 C 風格的函數名稱（`InitWindow`、`BeginDrawing`），Python 風格名稱（`init_window`、`begin_drawing`）來自 `pyray` 模組，目前未包含在 wasm 中。
+runtime 直接提供 C 風格的 `raylib` 模組。Python 風格名稱
+（`init_window`、`begin_drawing`）來自 `pyray`；Rayport 在建置遊戲時分析
+`main.py` 可達的匯入，並從遊戲的 `.venv` 或 `venv` 複製 `pyray` 與其他
+實際需要的純 Python 套件。原生 `.so`、`.pyd`、`.dll` 與 `.dylib` 不會被打包。

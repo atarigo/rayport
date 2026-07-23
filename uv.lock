@@ -87,10 +87,14 @@ wheels = [
 [[package]]
 name = "rayport"
 version = "0.2.1"
-source = { virtual = "." }
-dependencies = [
+source = { editable = "." }
+
+[package.dev-dependencies]
+dev = [
     { name = "cffi" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "cffi", specifier = ">=2.1.0" }]
+
+[package.metadata.requires-dev]
+dev = [{ name = "cffi", specifier = ">=2.1.0" }]

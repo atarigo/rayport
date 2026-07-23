@@ -22,7 +22,7 @@ class RuntimeFilesTests(unittest.TestCase):
             with patch.dict(os.environ, {"RAYPORT_RUNTIME": str(runtime)}):
                 self.assertEqual(find_runtime_dir(), runtime.resolve())
 
-    def test_incomplete_override_falls_back_to_source_runtime(self):
+    def test_incomplete_override_falls_back_to_package_runtime(self):
         with tempfile.TemporaryDirectory() as tmp:
             with patch.dict(os.environ, {"RAYPORT_RUNTIME": tmp}):
                 found = find_runtime_dir()

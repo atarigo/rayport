@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+from importlib import resources
+from importlib.metadata import PackageNotFoundError, distribution
 import os
 from pathlib import Path
 import shutil
-import sysconfig
 
 
 RUNTIME_FILENAMES = ("main.wasm", "main.js", "main.data")
@@ -21,14 +22,8 @@ def find_runtime_dir() -> Path:
     if override:
         candidates.append(Path(override).expanduser().resolve())
 
-    package_dir = Path(__file__).resolve().parent
-    candidates.extend(
-        (
-            package_dir / "runtime",
-            package_dir.parent.parent / "runtime",
-            Path(sysconfig.get_path("data")) / "share" / "rayport" / "runtime",
-        )
-    )
+    package_runtime = resources.files("rayport").joinpath("runtime")
+    candidates.append(Path(str(package_runtime)))
     for candidate in candidates:
         if _is_runtime_dir(candidate):
             return candidate
@@ -43,7 +38,16 @@ def find_runtime_dir() -> Path:
 
 def find_notice_dir(runtime_dir: Path) -> Path:
     package_dir = Path(__file__).resolve().parent
-    candidates = (runtime_dir, package_dir.parent.parent)
+    candidates = [runtime_dir, package_dir.parent.parent]
+    try:
+        installed_distribution = distribution("rayport")
+    except PackageNotFoundError:
+        installed_distribution = None
+    if installed_distribution is not None:
+        for packaged_file in installed_distribution.files or ():
+            if packaged_file.name == "THIRD_PARTY_NOTICES.md":
+                candidates.append(Path(installed_distribution.locate_file(packaged_file)).parent)
+
     for candidate in candidates:
         if (
             all((candidate / filename).is_file() for filename in NOTICE_FILENAMES)

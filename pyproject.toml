@@ -1,29 +1,62 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "rayport"
 version = "0.2.1"
 description = "Package raylib Python games for the web"
 readme = "README.md"
-license = "EPL-2.0"
-license-files = ["LICENSE"]
-requires-python = ">=3.13"
-dependencies = [
-    "cffi>=2.1.0",
+authors = [
+    { name = "wenke.studio" },
 ]
+license = "EPL-2.0"
+license-files = [
+    "LICENSE",
+    "THIRD_PARTY_NOTICES.md",
+    "third_party_licenses/*.txt",
+]
+requires-python = ">=3.13"
+keywords = [
+    "raylib",
+    "webassembly",
+    "wasm",
+    "games",
+    "packaging",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: WebAssembly",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Games/Entertainment",
+    "Topic :: Software Development :: Build Tools",
+]
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/atarigo/rayport"
+Repository = "https://github.com/atarigo/rayport"
+Documentation = "https://github.com/atarigo/rayport/tree/main/documentation"
+Issues = "https://github.com/atarigo/rayport/issues"
+
 [project.scripts]
 rayport = "rayport.cli:main"
+
+[dependency-groups]
+dev = [
+    "cffi>=2.1.0",
+]
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
 [tool.setuptools.package-data]
-rayport = ["templates/*.html"]
-
-[tool.setuptools.data-files]
-"share/rayport/runtime" = [
-    "runtime/main.wasm",
-    "runtime/main.js",
-    "runtime/main.data",
-    "LICENSE",
-    "THIRD_PARTY_NOTICES.md",
+rayport = [
+    "templates/*.html",
+    "runtime/*.wasm",
+    "runtime/*.js",
+    "runtime/*.data",
 ]
-"share/rayport/runtime/third_party_licenses" = ["third_party_licenses/*.txt"]

@@ -93,8 +93,8 @@ the largest packaged files. This report is opt-in and is not run automatically
 after `rayport build` or during `rayport dev`. Optimize source assets explicitly
 in your own asset pipeline when needed.
 
-Installed distributions include the prebuilt runtime under
-`share/rayport/runtime`. For a custom runtime, set the `RAYPORT_RUNTIME`
+Installed distributions include the prebuilt runtime inside the `rayport`
+Python package. For a custom runtime, set the `RAYPORT_RUNTIME`
 environment variable to a directory containing `main.wasm`, `main.js`, and
 `main.data`.
 

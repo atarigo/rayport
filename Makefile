@@ -4,7 +4,7 @@
 # 產出一個包含 CPython + raylib + CFFI bindings 的 WebAssembly binary。
 # 建置流程：clone 原始碼 -> 建置 native Python -> 交叉編譯 wasm ->
 #           編譯 raylib -> 產生 CFFI bindings -> 編譯模組 ->
-#           修補 config.c -> 安裝 Python 檔案 -> 最終連結 -> 複製到 runtime/
+#           修補 config.c -> 安裝 Python 檔案 -> 最終連結 -> 複製到 package data
 # =============================================================================
 
 # --- 組態預設值（build.conf 可覆寫）---
@@ -42,6 +42,7 @@ RAYLIB_LIB      = $(RAYLIB_SRC)/libraylib.a
 CFFI_C          = $(CACHE)/_raylib_cffi.c
 STUBS           = stubs
 PRELOAD_RAYLIB  = $(BUILD_DIR)/usr/local/lib/python3.12/raylib
+RUNTIME_DIR     = src/rayport/runtime
 
 # --- Local development defaults ---
 GAME            ?= examples/breakout
@@ -73,13 +74,13 @@ dev: ## 啟動範例遊戲開發伺服器（GAME、OUTPUT、PORT 可覆寫）
 	uv run rayport dev $(GAME) --output $(OUTPUT) --port $(PORT)
 
 # =============================================================================
-# 主要目標：完整建置並將產物複製到 runtime/
+# 主要目標：完整建置並將產物複製到 package data
 # =============================================================================
 
 .PHONY: runtime
-runtime: link ## 建置完整 wasm runtime 並複製產物到 runtime/
-	mkdir -p runtime
-	cp $(BUILD_DIR)/main.wasm $(BUILD_DIR)/main.js $(BUILD_DIR)/main.data runtime/
+runtime: link ## 建置完整 wasm runtime 並複製產物到 Python package
+	mkdir -p $(RUNTIME_DIR)
+	cp $(BUILD_DIR)/main.wasm $(BUILD_DIR)/main.js $(BUILD_DIR)/main.data $(RUNTIME_DIR)/
 
 # =============================================================================
 # Emscripten SDK 自動取得
@@ -248,5 +249,5 @@ clean: ## 刪除 .cache 建置快取
 	rm -rf $(CACHE)
 
 .PHONY: clean-runtime
-clean-runtime: ## 刪除 runtime/ 內的建置產物
-	rm -f runtime/main.wasm runtime/main.js runtime/main.data
+clean-runtime: ## 刪除 Python package 內的 runtime 建置產物
+	rm -f $(RUNTIME_DIR)/main.wasm $(RUNTIME_DIR)/main.js $(RUNTIME_DIR)/main.data

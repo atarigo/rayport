@@ -27,7 +27,7 @@
 7. 修補 CPython 的 `config.c`，把 `_raylib_cffi` 和 `_cffi_backend` 註冊為內建模組
 8. 安裝 raylib Python package 到 preload 目錄
 9. 靜態連結所有目標檔和函式庫，產出最終的 `main.wasm`、`main.js`、`main.data`
-10. 複製產物到 `runtime/`
+10. 複製產物到 `src/rayport/runtime/`
 
 ## 關鍵技術決策
 
@@ -48,4 +48,4 @@
 - `stubs/gen_cffi.py`：CFFI C 綁定碼產生器
 - `stubs/ffi_type_stubs.c`：libffi 型別描述符和 stub 函數
 - `stubs/web_stubs.c`：Web 平台未實作的 raylib 函數 stub
-- `runtime/`：建置產物存放目錄
+- `src/rayport/runtime/`：建置產物存放目錄，也是發布套件的 package data

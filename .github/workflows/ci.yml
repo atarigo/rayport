@@ -1,0 +1,96 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  unit-tests:
+    name: ${{ matrix.os }} / Python ${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ["3.13", "3.14"]
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+        with:
+          enable-cache: true
+
+      - name: Install project
+        run: uv sync --frozen --python "${{ matrix.python-version }}"
+
+      - name: Run unit tests
+        run: uv run --frozen --python "${{ matrix.python-version }}" python -m unittest discover -s tests -v
+
+  release-smoke:
+    name: Wheel and Chromium smoke test
+    needs: unit-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+        with:
+          enable-cache: true
+
+      - name: Install verification tools
+        run: uv sync --frozen --group ci --group browser
+
+      - name: Build distributions
+        run: uv build
+
+      - name: Check package metadata
+        run: uv run --frozen --group ci twine check dist/*
+
+      - name: Check distribution contents
+        run: uv run --frozen python tests/check_distributions.py dist/rayport-*.whl dist/rayport-*.tar.gz
+
+      - name: Install wheel without dependencies
+        run: |
+          uv venv --python 3.13 build/wheel-venv
+          uv pip install --python build/wheel-venv/bin/python --no-deps dist/rayport-*.whl
+
+      - name: Build Breakout with installed wheel
+        run: |
+          build/wheel-venv/bin/rayport --version
+          build/wheel-venv/bin/rayport build examples/breakout --output build/browser-game
+
+      - name: Install Chromium
+        run: uv run --frozen --group browser playwright install --with-deps chromium
+
+      - name: Run browser smoke test
+        run: uv run --frozen --group browser python tests/browser_smoke.py build/browser-game --artifacts build/browser-artifacts
+
+      - name: Upload browser diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v5
+        with:
+          name: browser-smoke-diagnostics
+          path: build/browser-artifacts/
+          if-no-files-found: ignore

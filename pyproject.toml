@@ -49,6 +49,12 @@ rayport = "rayport.cli:main"
 dev = [
     "cffi>=2.1.0",
 ]
+ci = [
+    "twine==6.2.0",
+]
+browser = [
+    "playwright==1.61.0",
+]
 
 [tool.setuptools.packages.find]
 where = ["src"]

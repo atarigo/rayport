@@ -1,5 +1,5 @@
-# 所有設定皆有預設值，不建立 build.conf 也能直接 make runtime。
-# 只需取消註解並修改要自訂的項目。
+# Every setting has a default, so make runtime works without build.conf.
+# Uncomment only the settings that need local overrides.
 
 # EMSDK_PATH       = /tmp/rayport-emsdk
 # EMSDK_VERSION    = 3.1.61

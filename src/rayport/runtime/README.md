@@ -12,10 +12,13 @@ CPython interpreter compiled to WebAssembly via Emscripten. User's Python game c
 
 ## How to build
 
-在專案根目錄執行：
+Run this command from the project root:
 
 ```bash
 make runtime
 ```
 
-Emscripten SDK 和所有原始碼依賴會自動下載。預設下載到 `/tmp/rayport-emsdk`（emsdk）和 `.cache/`（CPython、raylib 等原始碼）。如需自訂路徑或版本，建立 `build.conf`（參考 `build.conf.example`）。
+The Emscripten SDK and all source dependencies are downloaded automatically.
+By default, emsdk is stored in `/tmp/rayport-emsdk`, while CPython, raylib, and
+other sources are stored in `.cache/`. To customize paths or versions, create
+`build.conf` using `build.conf.example` as a template.

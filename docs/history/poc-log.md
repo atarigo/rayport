@@ -1,6 +1,8 @@
 # POC Verification Log
 
-> 歷史文件。記錄開發初期的技術可行性驗證過程。內容反映驗證當時的狀態，部分細節可能與最終實作不同。
+> Historical document. This records technical feasibility work from early
+> development. It reflects the state at the time and some details may differ
+> from the final implementation.
 
 This document records the full feasibility verification process for rayport (formerly raylib-web-tool), a tool that packages raylib Python games to run in the browser.
 
@@ -110,7 +112,7 @@ After rebuilding with 3.1.61, the REPL loaded and ran correctly.
 
 **EMSDK_QUIET not working**
 
-Adding `export EMSDK_QUIET=1` before `source emsdk_env.sh` in `~/.zshrc` didn't suppress the startup messages. Root cause: `~/.zprofile` also had `source emsdk_env.sh`（由其他工具或 emsdk 本身寫入），and `.zprofile` runs BEFORE `.zshrc`. The messages came from `.zprofile`'s source, when `EMSDK_QUIET` wasn't set yet.
+Adding `export EMSDK_QUIET=1` before `source emsdk_env.sh` in `~/.zshrc` didn't suppress the startup messages. Root cause: `~/.zprofile` also had `source emsdk_env.sh` (written by another tool or by emsdk itself), and `.zprofile` runs BEFORE `.zshrc`. The messages came from `.zprofile`'s source, when `EMSDK_QUIET` wasn't set yet.
 
 Fix: move `export EMSDK_QUIET=1` to `~/.zprofile`, before the `source` line. Remove the duplicate from `~/.zshrc`.
 

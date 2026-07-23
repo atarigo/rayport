@@ -9,7 +9,7 @@ are not listed. Full license texts are in `LICENSE` and
 
 | Component | Version used by the checked-in runtime | Source | License | Distribution form |
 |---|---|---|---|---|
-| Rayport | 0.2.1 | https://github.com/atarigo/rayport | EPL-2.0 | Python package, launcher and generated web files |
+| Rayport | 0.3.0 | https://github.com/atarigo/rayport | EPL-2.0 | Python package, launcher and generated web files |
 | raylib-python-cffi | 6.0.1.1, commit `caf21da0692693d00a07dab243acc3430f741e43` | https://github.com/electronstudio/raylib-python-cffi | EPL-2.0 | Four Python files in `main.data`; `gen_cffi.py` is adapted from its build script |
 | raylib | 5.5, commit `c1ab645ca298a2801097931d1079b10ff7eb9df8` | https://github.com/raysan5/raylib | Zlib | Statically linked into `main.wasm` |
 | CPython | 3.12.11, commit `55fee9cf216abe4ec0d1139f94b1930fbd0c7644` | https://github.com/python/cpython | PSF-2.0 and historical Python licenses | Interpreter in `main.wasm`; standard library in `main.data` |

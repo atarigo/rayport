@@ -1,60 +1,77 @@
-# rayport
+# Rayport
 
-Package raylib Python games to run in the browser.
+Package Python raylib games as static files that run in a web browser.
 
-## How it works
+Rayport includes the browser runtime needed to package a game. You do not need
+a separate raylib installation or compiler.
 
-The tool bundles a CPython interpreter and raylib engine compiled to WebAssembly. User game code (.py files and assets) is loaded into a virtual filesystem at runtime and executed by the wasm Python interpreter.
+## Installation
 
-## Prerequisites
-
-- Python 3.13+
-- git
-
-## Building the runtime
-
-The runtime contains the CPython wasm interpreter. Build it once; rebuild only when upgrading CPython or raylib.
-
-Emscripten SDK 和其他依賴會自動下載到 `/tmp/rayport-emsdk`，不需要預先安裝，也不會修改 shell 環境。
+Install Rayport as an isolated command-line tool:
 
 ```bash
-make runtime
+uv tool install rayport
 ```
 
-如需自訂路徑或版本，建立 `build.conf`（參考 `build.conf.example`）。
-
-## Usage
-
-Build a game for web deployment:
+or:
 
 ```bash
-rayport build ./my-game/
+pipx install rayport
 ```
 
-Generated directories contain a `.rayport-output` marker. Rayport refuses to
-delete a non-empty directory without that marker unless `--force-output` is
-passed explicitly. An output inside the game project (such as `dist/`) is
-automatically excluded from packaging and live reload. The output may never
-equal or contain the game source directory.
+Rayport requires Python 3.13 or newer. Python 3.13 and 3.14 are tested.
 
-Start a dev server with live reload:
+## Quick start
+
+Your game directory must contain `main.py`:
+
+```text
+my-game/
+├── main.py
+└── assets/
+```
+
+Start a local server with automatic rebuilding:
 
 ```bash
-rayport dev ./my-game/
+rayport dev ./my-game
 ```
 
-Inspect exactly which files will be packaged:
+Create a static web build:
 
 ```bash
-rayport inspect ./my-game/
-rayport inspect ./my-game/ --excluded
-rayport inspect ./my-game/ --explain tests/test_game.py
-rayport inspect ./my-game/ --sizes
+rayport build ./my-game --output dist
 ```
+
+Upload the contents of `dist/` to a static web server. The generated game must
+be served over HTTP or HTTPS; opening `index.html` directly with `file://` is not
+supported.
+
+## Commands
+
+Check the installed version:
+
+```bash
+rayport --version
+```
+
+See which files will be packaged:
+
+```bash
+rayport inspect ./my-game
+rayport inspect ./my-game --excluded
+rayport inspect ./my-game --explain tests/test_game.py
+rayport inspect ./my-game --sizes
+```
+
+Rayport marks generated directories with `.rayport-output`. It will not replace
+an unrelated non-empty directory unless you explicitly pass `--force-output`.
+
+Run `rayport COMMAND --help` for every available option.
 
 ## Project configuration
 
-Place `rayport.toml` in the game project root:
+Place `rayport.toml` in the game directory:
 
 ```toml
 config-version = 1
@@ -76,38 +93,42 @@ include = []
 
 Presentation modes:
 
-- `stretch` (default): display the canvas at `100vw` by `100dvh` without changing raylib's render resolution.
-- `fit`: fill as much of the browser viewport as possible while preserving aspect ratio.
-- `pixel-perfect`: use integer scaling when the viewport is large enough.
-- `native`: display one CSS pixel per render pixel.
+- `stretch` fills the browser viewport.
+- `fit` preserves the game's aspect ratio.
+- `pixel-perfect` uses integer scaling when possible.
+- `native` displays one CSS pixel per game pixel.
 
-The game owns its render resolution through `InitWindow()`. Rayport only controls
-the canvas's CSS presentation size. Command-line options override `rayport.toml`,
-which overrides Rayport defaults.
+The game controls its render resolution through `InitWindow()`. Command-line
+options override `rayport.toml`, which overrides Rayport defaults.
 
-`rayport.toml` is packaging metadata and is not included in `game.tar.gz`.
+## Packaging behavior
 
-Rayport packages assets exactly as provided. It never converts image or audio
-formats implicitly. Use `rayport inspect GAME --sizes` for a read-only report of
-the largest packaged files. This report is opt-in and is not run automatically
-after `rayport build` or during `rayport dev`. Optimize source assets explicitly
-in your own asset pipeline when needed.
+- `main.py` is required.
+- Hidden paths, virtual environments, caches, `node_modules`, `build`, and
+  `rayport.toml` are excluded by default.
+- Images, audio, and other assets are packaged without conversion.
+- Symbolic links, FIFOs, sockets, devices, and other non-regular files are
+  rejected when they would be included.
+- Python packages installed on the host are not copied automatically. Pure
+  Python packages can be included inside the game directory; native extension
+  modules such as `.so` and `.pyd` cannot run in the WebAssembly runtime.
 
-Installed distributions include the prebuilt runtime inside the `rayport`
-Python package. For a custom runtime, set the `RAYPORT_RUNTIME`
-environment variable to a directory containing `main.wasm`, `main.js`, and
-`main.data`.
+## Compatibility
 
-## Documentation
+- Rayport CLI: Python 3.13 and 3.14 tested on Linux, macOS, and Windows.
+- Browser runtime: CPython 3.12.11 and raylib 5.5.
+- Browser: Chromium is tested automatically.
+- Firefox and Safari have not been verified yet.
 
-See [documentation/](documentation/README.md) for architecture details and module descriptions.
+Because the browser runtime uses CPython 3.12, game code must be compatible with
+Python 3.12 even when the Rayport CLI runs on a newer Python version.
 
 ## License
 
-Rayport is licensed under the Eclipse Public License 2.0. Generated web builds
-include `rayport-licenses/LICENSE` and
-`rayport-licenses/THIRD_PARTY_NOTICES.md` plus the referenced license texts for
-the bundled runtime.
-Rayport's license does not apply to an independent game merely packaged by the
-tool. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for the raylib and
-raylib-python-cffi notices and source locations.
+Rayport is licensed under the Eclipse Public License 2.0. Generated builds
+include Rayport and third-party license notices. The license does not apply to
+independent game code merely packaged by Rayport.
+
+See the
+[third-party notices](https://github.com/atarigo/rayport/blob/main/THIRD_PARTY_NOTICES.md)
+for additional information.

@@ -10,9 +10,9 @@ rayport 由兩個部分組成：
 使用者執行 `rayport build ./my-game/` 後，產出一個 `build/` 目錄，包含：
 
 - `index.html`：承載遊戲的 HTML 頁面
-- `main.wasm`（8.8 MB）：CPython + raylib wasm binary
-- `main.js`（269 KB）：Emscripten 膠水碼，負責載入 wasm、初始化記憶體、設定 canvas
-- `main.data`（3 MB）：Python 標準函式庫（.pyc），啟動時載入虛擬檔案系統
+- `main.wasm`（14.1 MiB）：CPython + raylib wasm binary
+- `main.js`（286.4 KiB）：Emscripten 膠水碼，負責載入 wasm、初始化記憶體、設定 canvas
+- `main.data`（3.0 MiB）：Python 標準函式庫（.pyc），啟動時載入虛擬檔案系統
 - `game.tar.gz`：使用者的遊戲碼和資源檔
 
 把 `build/` 上傳到任何靜態網頁伺服器就能玩。
@@ -42,7 +42,7 @@ rayport 由兩個部分組成：
 
 `_raylib_cffi` 和 `_cffi_backend` 透過修改 CPython 的 `Modules/config.c`，在 `_PyImport_Inittab` 陣列中註冊為內建模組。Python 碼 `import _raylib_cffi` 時直接取得內建模組，不經過檔案系統。
 
-不使用 Emscripten 的 `-sMAIN_MODULE` 動態連結模式。這個決策解決了 raylib RLGL 全域變數的 PIC relocation 問題，同時把 wasm 體積從 18 MB 降到 8.8 MB。代價是 Python 無法在 runtime 載入 `.so` 擴充模組，但所有需要的模組都已經靜態編譯進去了。
+不使用 Emscripten 的 `-sMAIN_MODULE` 動態連結模式。這個決策解決了 raylib RLGL 全域變數的 PIC relocation 問題。代價是 Python 無法在 runtime 載入 `.so` 擴充模組，但所有需要的模組都已經靜態編譯進去了。
 
 ## ASYNCIFY 遊戲迴圈
 
@@ -75,7 +75,7 @@ wasm 用的 `__init__.py` 改為：
 - Emscripten 3.1.61（6.0.2 的 resizable ArrayBuffer 與瀏覽器 Crypto API 不相容）
 - CPython 3.12.11
 - raylib 5.5
-- Python 3.13+（host，執行建置腳本和 CLI 工具）
+- Python 3.13、3.14（已驗證的 host CLI 版本）
 
 建置流程由 `Makefile` 自動化，設定項放在 `build.conf`（gitignored），範本見 `build.conf.example`。
 

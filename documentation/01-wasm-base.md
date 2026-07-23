@@ -6,9 +6,9 @@
 
 產出三個檔案：
 
-- `main.wasm`（8.8 MB）：CPython 3.12.11 + raylib 5.5 + CFFI 綁定，靜態連結成單一 wasm
-- `main.js`（269 KB）：Emscripten 膠水碼，負責載入 wasm、初始化記憶體、設定 canvas、連接瀏覽器事件
-- `main.data`（3 MB）：Python 標準函式庫（.pyc）和 raylib Python package（.py），打包成 preload 資料
+- `main.wasm`（14.1 MiB）：CPython 3.12.11 + raylib 5.5 + CFFI 綁定，靜態連結成單一 wasm
+- `main.js`（286.4 KiB）：Emscripten 膠水碼，負責載入 wasm、初始化記憶體、設定 canvas、連接瀏覽器事件
+- `main.data`（3.0 MiB）：Python 標準函式庫（.pyc）和 raylib Python package（.py），打包成 preload 資料
 
 這三個檔案跟使用者的遊戲碼無關。只要 CPython 和 raylib 版本不變，不需要重新建置。
 
@@ -31,7 +31,7 @@
 
 ## 關鍵技術決策
 
-**全部靜態連結**：不使用 Emscripten 的 `-sMAIN_MODULE` 動態連結模式。raylib 的 RLGL 全域結構體會產生與 PIC 模式不相容的 relocations。靜態連結同時把 wasm 體積從 18 MB 降到 8.8 MB。
+**全部靜態連結**：不使用 Emscripten 的 `-sMAIN_MODULE` 動態連結模式。raylib 的 RLGL 全域結構體會產生與 PIC 模式不相容的 relocations，也不需要瀏覽器端動態載入原生模組。
 
 **Emscripten 3.1.61**：emsdk 6.0.2 預設啟用 resizable ArrayBuffer，Chrome 的 `Crypto.getRandomValues()` 和 `TextDecoder.decode()` 不接受 resizable ArrayBuffer 上的 view。
 

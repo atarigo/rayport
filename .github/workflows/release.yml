@@ -1,0 +1,119 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v[0-9]*"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build and verify distributions
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+        with:
+          enable-cache: true
+
+      - name: Check tag and package versions
+        shell: bash
+        run: |
+          tag_version="${GITHUB_REF_NAME#v}"
+          package_version="$(python -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')"
+          if [[ "$tag_version" != "$package_version" ]]; then
+            echo "Tag version $tag_version does not match package version $package_version."
+            exit 1
+          fi
+
+      - name: Install verification tools
+        run: uv sync --frozen --group ci --group browser
+
+      - name: Run unit tests
+        run: uv run --frozen python -m unittest discover -s tests -v
+
+      - name: Build distributions
+        run: uv build
+
+      - name: Check package metadata
+        run: uv run --frozen --group ci twine check dist/*
+
+      - name: Check distribution contents
+        run: uv run --frozen python tests/check_distributions.py dist/rayport-*.whl dist/rayport-*.tar.gz
+
+      - name: Install wheel without dependencies
+        run: |
+          uv venv --python 3.13 build/wheel-venv
+          uv pip install --python build/wheel-venv/bin/python --no-deps dist/rayport-*.whl
+
+      - name: Build Breakout with installed wheel
+        run: |
+          build/wheel-venv/bin/rayport --version
+          build/wheel-venv/bin/rayport build examples/breakout --output build/browser-game
+
+      - name: Install Chromium
+        run: uv run --frozen --group browser playwright install --with-deps chromium
+
+      - name: Run browser smoke test
+        run: uv run --frozen --group browser python tests/browser_smoke.py build/browser-game --artifacts build/browser-artifacts
+
+      - name: Upload browser diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v5
+        with:
+          name: release-browser-smoke-diagnostics
+          path: build/browser-artifacts/
+          if-no-files-found: ignore
+
+      - name: Upload distributions
+        uses: actions/upload-artifact@v5
+        with:
+          name: python-package-distributions
+          path: dist/
+          if-no-files-found: error
+
+  publish:
+    name: Publish to PyPI
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/rayport/
+    permissions:
+      contents: write
+      id-token: write
+
+    steps:
+      - name: Download distributions
+        uses: actions/download-artifact@v6
+        with:
+          name: python-package-distributions
+          path: dist/
+
+      - name: Prepare GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release create "$GITHUB_REF_NAME" dist/* --verify-tag --generate-notes --draft
+          fi
+
+      - name: Publish distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release edit "$GITHUB_REF_NAME" --draft=false

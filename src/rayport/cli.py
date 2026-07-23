@@ -1,4 +1,5 @@
 import argparse
+from importlib.metadata import version as package_version
 from pathlib import Path
 
 from rayport.config import ConfigError, PRESENTATION_MODES, load_config, validate_web_values
@@ -155,6 +156,11 @@ def add_shared_options(parser):
 
 def main():
     parser = argparse.ArgumentParser(prog="rayport", description="Package raylib Python games for the web")
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"%(prog)s {package_version('rayport')}",
+    )
     subparsers = parser.add_subparsers(dest="command")
 
     build_parser = subparsers.add_parser("build", help="Build a game for web deployment")

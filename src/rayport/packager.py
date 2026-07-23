@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from fnmatch import fnmatchcase
 from pathlib import Path
 import re
+import stat
 
 DEFAULT_EXCLUDE = (
     ".*",
@@ -28,6 +29,36 @@ class FileDecision:
     included: bool
     reason: str
     size: int = 0
+
+
+def _entry_type(path: Path) -> str:
+    mode = path.lstat().st_mode
+    if stat.S_ISLNK(mode):
+        return "symbolic link"
+    if stat.S_ISREG(mode):
+        return "regular file"
+    if stat.S_ISDIR(mode):
+        return "directory"
+    if stat.S_ISFIFO(mode):
+        return "FIFO"
+    if stat.S_ISSOCK(mode):
+        return "socket"
+    if stat.S_ISCHR(mode):
+        return "character device"
+    if stat.S_ISBLK(mode):
+        return "block device"
+    return "unknown file type"
+
+
+def _raise_unsupported_entries(entries: list[tuple[str, str]]) -> None:
+    if not entries:
+        return
+    details = "\n".join(f"  {path}: {entry_type}" for path, entry_type in entries)
+    raise ValueError(
+        "Unsupported filesystem entries would be packaged:\n"
+        f"{details}\n"
+        "Rayport only packages regular files and directories."
+    )
 
 
 def _matches(path: str, pattern: str) -> bool:
@@ -82,21 +113,36 @@ def inspect_game(
 
     ignored = tuple(Path(path).resolve() for path in ignore_paths)
     decisions = []
+    unsupported = []
     for root, dirs, files in os.walk(game_path):
         dirs[:] = sorted(
             directory
             for directory in dirs
             if not any((Path(root) / directory).resolve() == path for path in ignored)
         )
+        for directory in dirs:
+            directory_path = Path(root) / directory
+            entry_type = _entry_type(directory_path)
+            if entry_type == "directory":
+                continue
+            relative = directory_path.relative_to(game_path).as_posix()
+            decision = decide_file(relative, exclude=exclude, include=include)
+            if decision.included:
+                unsupported.append((relative, entry_type))
+
         for filename in sorted(files):
             filepath = Path(root) / filename
             if any(filepath.resolve() == path for path in ignored):
                 continue
             relative = filepath.relative_to(game_path).as_posix()
             decision = decide_file(relative, exclude=exclude, include=include)
+            entry_type = _entry_type(filepath)
+            if decision.included and entry_type != "regular file":
+                unsupported.append((relative, entry_type))
             decisions.append(
-                FileDecision(decision.path, decision.included, decision.reason, filepath.stat().st_size)
+                FileDecision(decision.path, decision.included, decision.reason, filepath.lstat().st_size)
             )
+    _raise_unsupported_entries(unsupported)
     return decisions
 
 
@@ -110,7 +156,7 @@ def pack_game(
     game_path = Path(game_dir).resolve()
     if not game_path.is_dir():
         raise FileNotFoundError(f"Game directory not found: {game_dir}")
-    if not (game_path / "main.py").exists():
+    if not (game_path / "main.py").is_file():
         raise FileNotFoundError(f"main.py not found in {game_dir}")
     main_decision = decide_file("main.py", exclude=exclude, include=include)
     if not main_decision.included:
@@ -118,13 +164,17 @@ def pack_game(
 
     output_file = Path(output_path).resolve()
 
+    decisions = inspect_game(
+        str(game_path),
+        exclude=exclude,
+        include=include,
+        ignore_paths=ignore_paths,
+    )
     with tarfile.open(output_path, "w:gz") as tar:
-        for decision in inspect_game(
-            str(game_path),
-            exclude=exclude,
-            include=include,
-            ignore_paths=ignore_paths,
-        ):
+        for decision in decisions:
             source_file = game_path / decision.path
             if decision.included and source_file.resolve() != output_file:
-                tar.add(source_file, arcname=decision.path)
+                entry_type = _entry_type(source_file)
+                if entry_type != "regular file":
+                    _raise_unsupported_entries([(decision.path, entry_type)])
+                tar.add(source_file, arcname=decision.path, recursive=False)

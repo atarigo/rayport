@@ -1,4 +1,5 @@
 import gzip
+import os
 import tarfile
 import tempfile
 import unittest
@@ -80,6 +81,80 @@ class PackagerTests(unittest.TestCase):
                 names = archive.getnames()
         self.assertIn(long_name, names)
         self.assertIn(b"././@PaxHeader", raw_tar)
+
+    def test_rejects_included_symbolic_links_and_lists_the_path(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            game = root / "game"
+            game.mkdir()
+            (game / "main.py").write_text("pass\n")
+            target = root / "outside.txt"
+            target.write_text("outside\n")
+            link = game / "assets" / "outside.txt"
+            link.parent.mkdir()
+            try:
+                link.symlink_to(target)
+            except OSError as exc:
+                self.skipTest(f"symbolic links are unavailable: {exc}")
+
+            output = root / "game.tar.gz"
+            with self.assertRaisesRegex(
+                ValueError,
+                r"assets/outside\.txt: symbolic link",
+            ):
+                pack_game(str(game), str(output))
+            self.assertFalse(output.exists())
+
+    def test_rejects_symbolic_links_to_directories(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            game = root / "game"
+            game.mkdir()
+            (game / "main.py").write_text("pass\n")
+            target = root / "outside-assets"
+            target.mkdir()
+            link = game / "linked-assets"
+            try:
+                link.symlink_to(target, target_is_directory=True)
+            except OSError as exc:
+                self.skipTest(f"symbolic links are unavailable: {exc}")
+
+            with self.assertRaisesRegex(ValueError, r"linked-assets: symbolic link"):
+                inspect_game(str(game))
+
+    def test_rejects_included_non_regular_files_and_lists_the_type(self):
+        if not hasattr(os, "mkfifo"):
+            self.skipTest("FIFOs are unavailable")
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            game = root / "game"
+            game.mkdir()
+            (game / "main.py").write_text("pass\n")
+            os.mkfifo(game / "events.pipe")
+
+            with self.assertRaisesRegex(ValueError, r"events\.pipe: FIFO"):
+                inspect_game(str(game))
+
+    def test_ignores_unsupported_entries_excluded_from_the_package(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            game = root / "game"
+            game.mkdir()
+            (game / "main.py").write_text("pass\n")
+            target = root / "outside.txt"
+            target.write_text("outside\n")
+            excluded_dir = game / ".venv"
+            excluded_dir.mkdir()
+            link = excluded_dir / "python"
+            try:
+                link.symlink_to(target)
+            except OSError as exc:
+                self.skipTest(f"symbolic links are unavailable: {exc}")
+
+            decisions = inspect_game(str(game))
+
+        by_path = {item.path: item for item in decisions}
+        self.assertFalse(by_path[".venv/python"].included)
 
 
 if __name__ == "__main__":

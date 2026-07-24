@@ -1,6 +1,11 @@
 # Rayport
 
+[![CI](https://github.com/atarigo/rayport/actions/workflows/ci.yml/badge.svg)](https://github.com/atarigo/rayport/actions/workflows/ci.yml)
+[![License: EPL-2.0](https://img.shields.io/badge/License-EPL--2.0-blue.svg)](LICENSE)
+
 Package Python raylib games as static files that run in a web browser.
+
+[Website](https://rayport.atarigo.io) · [Live demo](https://rayport.atarigo.io/#example) · [PyPI](https://pypi.org/project/rayport/)
 
 Rayport includes the browser runtime needed to package a game. You do not need
 a separate raylib installation or compiler.
